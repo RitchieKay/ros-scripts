@@ -15,6 +15,8 @@ from quarternion import *
 from chebyshev import *
 from vector import *
 
+AU = 149597870.700
+C  = 299792.458
 
 class EphemeridesError(Exception):
     def __init__(self):
@@ -112,7 +114,33 @@ class Ephemerides:
         T = self.getT(t)
         return Vector(self.sunScX_cheb.value(T), self.sunScY_cheb.value(T), self.sunScZ_cheb.value(T))
 
-     
+    def sunScDirection(self, t):
+        return self.sunScVector(t).norm()
+
+    def sunScDistance(self, t):
+        return self.sunScVector(t).magnitude()
+
+    def sunScDistanceAU(self, t):
+        return self.sunScDistance(t)/AU
+
     def earthScVector(self, t):
         T = self.getT(t)
         return Vector(self.earthScX_cheb.value(T), self.earthScY_cheb.value(T), self.earthScZ_cheb.value(T))
+
+    def earthScDirection(self, t):
+        return self.earthScVector(t).norm()
+
+    def earthScDistance(self, t):
+        return self.earthScVector(t).magnitude()
+
+    def earthScDistanceAU(self, t):
+        return self.earthScDistance(t)/AU
+
+    def sunScEarthAngle(self, t):
+      return math.degrees(self.earthScDirection(t).anglebetween(self.sunScDirection(t)))
+
+    def OWLTstr(self, t):
+        return str(datetime.timedelta(seconds=self.OWLT(t)))
+
+    def OWLT(self, t):
+        return self.earthScDistance(t)/C

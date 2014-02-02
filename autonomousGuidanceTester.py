@@ -2,6 +2,7 @@
 import sys
 import math
 import datetime
+import time
 from ephemeridesParser import *
 from autonomousGuidance import *
 
@@ -14,14 +15,18 @@ def main():
         print 'Usage:', sys.argv[0], '<fdr file>'
         sys.exit(-1)
 
-    autoGuid = AutonomousGuidance(EphemeridesParser(sys.argv[1]).ephemerides())
+    eph = EphemeridesParser(sys.argv[1]).ephemerides()
+    autoGuid = AutonomousGuidance(eph)
     autoGuid.setEarthPointing()
     autoGuid.setPerpendicularToEcliptic()
     autoGuid.setNorthPointing()
     autoGuid.setPointedAxis(Vector(0.819,0,0.574))
-    nowTime = calendar.timegm(datetime.datetime.now().timetuple())
+    t = calendar.timegm(datetime.datetime.utcnow().timetuple())
+    t -= eph.OWLT(t)
 
-    q = autoGuid.quarternion(nowTime)
+    print time.gmtime(t)
+
+    q = autoGuid.quarternion(t)
 
     print q
     q.print_rotated_axis()
