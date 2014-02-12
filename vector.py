@@ -39,7 +39,7 @@ class Vector:
 
     def norm(self):
         m = self.magnitude()
-        return Vector(self.v1/m, self.v2/m, self.v3/m)
+        return Vector(self.v1/m/m, self.v2/m/m, self.v3/m/m)
 
 
     def normalize(self):

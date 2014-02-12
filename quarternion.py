@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import math
+from vector import *
 
 class Rotation:
 
@@ -116,6 +117,37 @@ class Quarternion:
         self.v3 = self.v3 / n
 
         return self
+
+    def rotate_vector(self, v):
+
+        q0_2 = self.s * self.s
+        q1_2 = self.v1 * self.v1
+        q2_2 = self.v2 * self.v2
+        q3_2 = self.v3 * self.v3
+
+
+#      -- compute first element
+#      VECT(X1) :=       T_FLOAT_EP(P_V(X1)) * (Q0_2 + Q1_2 - Q2_2 - Q3_2)
+#                + 2.0 * T_FLOAT_EP(P_V(X2)) * (P_Q.VECT(X1)*P_Q.VECT(X2) + P_Q.SCAL*P_Q.VECT(X3))
+#                + 2.0 * T_FLOAT_EP(P_V(X3)) * (P_Q.VECT(X1)*P_Q.VECT(X3) - P_Q.SCAL*P_Q.VECT(X2))
+
+        v_x1 = v.X() * (q0_2 + q1_2 - q2_2 -q3_2) + 2.0 * v.Y() * (self.v1*self.v2 + self.s*self.v3) + 2.0 * v.Y() * (self.v1*self.v3 - self.s*self.v2)
+
+#      -- compute second element
+#      VECT(X2) := 2.0 * T_FLOAT_EP(P_V(X1)) * (P_Q.VECT(X1)*P_Q.VECT(X2) - P_Q.SCAL*P_Q.VECT(X3))
+#                +       T_FLOAT_EP(P_V(X2)) * (Q0_2 - Q1_2 + Q2_2 - Q3_2)
+#                + 2.0 * T_FLOAT_EP(P_V(X3)) * (P_Q.VECT(X2)*P_Q.VECT(X3) + P_Q.SCAL*P_Q.VECT(X1))
+
+        v_x2 = 2.0 * v.X() * (self.v1*self.v2 - self.s*self.v3) + v.Y() * (q0_2 - q1_2 + q2_2 - q3_2) + 2.0 * v.Z() * (self.v2*self.v3 + self.s*self.v1)
+
+#      -- compute third element
+#      VECT(X3) := 2.0 * T_FLOAT_EP(P_V(X1)) * (P_Q.VECT(X1)*P_Q.VECT(X3) + P_Q.SCAL*P_Q.VECT(X2))
+#                + 2.0 * T_FLOAT_EP(P_V(X2)) * (P_Q.VECT(X2)*P_Q.VECT(X3) - P_Q.SCAL*P_Q.VECT(X1))
+#                +       T_FLOAT_EP(P_V(X3)) * (Q0_2 - Q1_2 - Q2_2 + Q3_2)
+
+        v_x3 = 2.0 * v.X() * (self.v1*self.v3 + self.s*self.v2) + 2.0 * v.Y() * (self.v2*self.v3 - self.s*self.v1) + v.Z() * (q0_2 - q1_2 - q2_2 + q3_2)
+
+        return Vector(v_x1, v_x2, v_x3)
 
     def print_rotated_axis(self):
 
