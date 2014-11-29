@@ -1,5 +1,5 @@
 from ephemerides import *
-from quarternion import *
+from quaternion import *
 
 class AutonomousGuidance: 
 
@@ -34,7 +34,7 @@ class AutonomousGuidance:
     def setPointedAxis(self, a):
         self._pointedAxis = a
         
-    def quarternion(self, t):
+    def quaternion(self, t):
     
         ecliptic_normal = Vector(0.0,-0.3987,0.9171)
         v_sc_axis = Vector(1,0,0)
@@ -81,5 +81,5 @@ class AutonomousGuidance:
         v_z_axis = v_x_axis.vectorproduct(v_y_axis)
 
 
-        return Quarternion.createFromVectors(v_x_axis, v_y_axis, v_z_axis)
+        return Quaternion.createFromVectors(v_x_axis, v_y_axis, v_z_axis)
 

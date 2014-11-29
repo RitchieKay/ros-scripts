@@ -8,7 +8,7 @@
 from fdr_parser import *
 import re
 import sys
-from quarternion import *
+from quaternion import *
 from chebyshev import *
 
 class AttitudeProfileError(Exception):
@@ -65,9 +65,9 @@ class AttitudeProfile:
         self.q3_cheb.add_coefficient(6, p[34].get_value())
         self.q3_cheb.add_coefficient(7, p[35].get_value())
 
-    def initial_quarternion(self):
-      return Quarternion(self.q0_cheb.value(-1), self.q1_cheb.value(-1), self.q2_cheb.value(-1), self.q3_cheb.value(-1)).normalize()
+    def initial_quaternion(self):
+      return Quaternion(self.q0_cheb.value(-1), self.q1_cheb.value(-1), self.q2_cheb.value(-1), self.q3_cheb.value(-1)).normalize()
 
-    def final_quarternion(self):
-      return Quarternion(self.q0_cheb.value(1), self.q1_cheb.value(1), self.q2_cheb.value(1), self.q3_cheb.value(1)).normalize()
+    def final_quaternion(self):
+      return Quaternion(self.q0_cheb.value(1), self.q1_cheb.value(1), self.q2_cheb.value(1), self.q3_cheb.value(1)).normalize()
 

@@ -21,6 +21,15 @@ class Vector:
     def __sub__(self, other):
         return Vector(self.v1 - other.v1, self.v2 - other.v2, self.v3 - other.v3)
 
+    def __neg__(self):
+        return Vector(-self.v1, -self.v2, -self.v3)
+
+    def __getitem__(self, i):
+        return self.vector()[i]
+  
+
+    def vector(self):
+        return [self.v1, self.v2, self.v3] 
 
     def X(self):
         return self.v1
@@ -39,7 +48,7 @@ class Vector:
 
     def norm(self):
         m = self.magnitude()
-        return Vector(self.v1/m/m, self.v2/m/m, self.v3/m/m)
+        return Vector(self.v1/m, self.v2/m, self.v3/m)
 
 
     def normalize(self):

@@ -2,11 +2,8 @@
 import sys
 import math
 import datetime
-import time
 from ephemeridesParser import *
 from autonomousGuidance import *
-from antennaPointingMechanism import *
-from vector import *
 
 AU = 149597870.700
 C  = 299792.458
@@ -17,26 +14,17 @@ def main():
         print 'Usage:', sys.argv[0], '<fdr file>'
         sys.exit(-1)
 
-    eph = EphemeridesParser(sys.argv[1]).ephemerides()
-    autoGuid = AutonomousGuidance(eph)
-    autoGuid.setEarthPointing()
-    autoGuid.setPerpendicularToEcliptic()
+    autoGuid = AutonomousGuidance(EphemeridesParser(sys.argv[1]).ephemerides())
+    autoGuid.setSunPointing()
+    autoGuid.setPerpendicularToSunSpacecraft()
     autoGuid.setNorthPointing()
-    autoGuid.setPointedAxis(Vector(0.819,0,0.574))
-    t = calendar.timegm(datetime.datetime.utcnow().timetuple())
-    t -= eph.OWLT(t)
+    autoGuid.setPointedAxis(Vector(math.cos(0.0),0,math.sin(0.0)))
+    nowTime = calendar.timegm(datetime.datetime.now().timetuple())
 
-    print 'time =', datetime.datetime.fromtimestamp(time.mktime(time.gmtime(t))).strftime('%Y-%jT%H:%M:%S')
+    q = autoGuid.quaternion(nowTime)
 
-    q = autoGuid.quarternion(t)
-
-    print
-    print 'Autonomous Guidance Quarternion =' , q
-    print
-    print 'Rotated axis:'
+    print q
     q.print_rotated_axis()
-
-    print 'HGA elevation = ', apme().compute_angles(eph.earthScVector(t), q)
 
 if __name__ == '__main__':
     main()

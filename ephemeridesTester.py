@@ -14,19 +14,22 @@ def main():
         print 'Usage:', sys.argv[0], '<fdr file>'
         sys.exit(-1)
 
-    e = EphemeridesParser(sys.argv[1]).ephemerides()
+    ephemerides = EphemeridesParser(sys.argv[1]).ephemerides()
 
-    t = calendar.timegm(datetime.datetime.utcnow().timetuple())
+    nowTime = calendar.timegm(datetime.datetime.now().timetuple())
 
-    print 'Earth Spacecraft Vector = ', e.earthScDirection(t)
-    print 'Sun Spacecraft Vector   = ', e.sunScDirection(t)
+    eV = ephemerides.earthScVector(nowTime)
+    sV = ephemerides.sunScVector(nowTime)
 
-    print 'Earth - Sun - Spacecraft angle =', e.sunScEarthAngle(t)
+    print 'Earth Spacecraft Vector = ', eV, eV.norm()
+    print 'Sun Spacecraft Vector   = ', sV, sV.norm()
 
-    print 'Earth Spacecraft Distance = ', e.earthScDistance(t), '=', e.earthScDistanceAU(t), 'AU'
-    print 'Sun Spacecraft Distance   = ', e.sunScDistance(t), '=', e.sunScDistanceAU(t), 'AU'
+    print 'Earth - Sun - Spacecraft angle =', math.degrees(eV.anglebetween(sV))
 
-    print 'OWLT =', e.OWLTstr(t)
+    print 'Earth Spacecraft Distance = ', eV.magnitude(), '=', eV.magnitude()/AU, 'AU'
+    print 'Sun Spacecraft Distance   = ', sV.magnitude(), '=', sV.magnitude()/AU, 'AU'
+
+    print 'OWLT =', str(datetime.timedelta(seconds = eV.magnitude() / C))
 
 if __name__ == '__main__':
     main()
