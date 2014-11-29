@@ -10,6 +10,12 @@ class Rotation:
         self.angle = 1.0 * angle
         self.vector = vector
 
+    def angle(self):
+        return self.angle
+
+    def vector(self):
+        return self.vector
+
     def __str__(self):
 
         return str(self.angle) + ', ' + '(' + str(self.vector[0]) + ', ' + str(self.vector[1]) + ', ' + str(self.vector[2]) + ')'
@@ -148,6 +154,16 @@ class Quaternion:
         print 'v2:', (self.v2 + q2.v2)/2, (q2.v2 - self.v2)/2
         print 'v3:', (self.v3 + q2.v3)/2, (q2.v3 - self.v3)/2
 
+
+    def __getitem__(self, i):
+        if i == 0:
+            return self.s
+        elif i == 1:
+            return self.v1
+        elif i == 2:
+            return self.v2
+        elif i == 3:
+            return self.v3
 
     def __mul__(self, other):
 

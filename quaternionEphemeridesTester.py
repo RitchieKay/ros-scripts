@@ -5,8 +5,10 @@ import datetime
 from ephemeridesParser import *
 from autonomousGuidance import *
 from quaternion import *
+from rotationPlanner import *
+from slewAttitudeGenerator import *
+from chebyshev import *
 
-TOL = 0.995
 
 def main():
 
@@ -18,82 +20,98 @@ def main():
 
     nowTime = calendar.timegm(datetime.datetime.now().timetuple())
 
-    eV = ephemerides.earthScVector(nowTime)
-    sV = ephemerides.sunScVector(nowTime)
-
 
     attitudeI = Quaternion(0.143, 0.266, 0.494, 0.815)
 
     rx = Rotation(20, Vector(0,1,0))
-    ry = Rotation(20, Vector(1,0,0))
-    rz = Rotation(20, Vector(0,0,1))
 
-    attitudeE = attitudeI * rz.quaternion() * ry.quaternion() * rx.quaternion()
+    attitudeE = attitudeI * rx.quaternion()
 
-    spacecraftSunVectorI =  -attitudeI.conjugate().rotate_vector(sV.norm()).norm()
-    spacecraftSunVectorE =  -attitudeE.conjugate().rotate_vector(sV.norm()).norm()
-
-
-    # rotation 1
-    numerator = spacecraftSunVectorI.X()*spacecraftSunVectorE.X() + spacecraftSunVectorI.Z()*spacecraftSunVectorE.Z()
-    denominator = math.sqrt(spacecraftSunVectorI.X()*spacecraftSunVectorI.X() + spacecraftSunVectorI.Z()*spacecraftSunVectorI.Z()) * \
-                  math.sqrt(spacecraftSunVectorE.X()*spacecraftSunVectorE.X() + spacecraftSunVectorE.Z()*spacecraftSunVectorE.Z())
-
-    cos_alpha = numerator / denominator
-    angle1 = 0
-    vector1 = Vector(0,0,0)
-    if cos_alpha < -TOL:
-        angle1 = math.pi
-        vector1 = Vector(0,1,0)
-    elif cos_alpha < TOL:
-      angle1 = math.acos(cos_alpha)
-      sign = spacecraftSunVectorI.Z() * spacecraftSunVectorE.X() - spacecraftSunVectorI.X() * spacecraftSunVectorE.Z()
-      Y = 1
-      if sign > 0:
-          Y = -1
-      vector1 = Vector(0, Y, 0)   
-        
-    r1 = Rotation(angle1 * 180.0 / math.pi, vector1.vector())
-    q1 = r1.quaternion()
-
-    # rotation 2
-    spacecraftSunVectorXZ = q1.conjugate().rotate_vector(spacecraftSunVectorI)
+    rp = RotationPlanner()
+    rp.set_ephemerides(ephemerides)
+    rp.generate_rotations(attitudeI, attitudeE, nowTime)
    
-    cos_alpha = spacecraftSunVectorXZ.scalarproduct(spacecraftSunVectorE)
- 
-    angle2 = 0
-    vector2 = Vector(0,0,0)
-    if cos_alpha < -TOL:
-        angle2 = math.pi
-        vector2 = Vector(1,0,0)
-    elif cos_alpha < TOL:
-        angle2 = math.acos(cos_alpha)
-        vector2 = spacecraftSunVectorE.vectorproduct(spacecraftSunVectorXZ).norm()
-
-    r2 = Rotation(angle2 * 180.0 / math.pi, vector2.vector())
-    q2 = r2.quaternion()
-
-    # rotation 3
-    deltaQ = q2.conjugate() * q1.conjugate() * attitudeI.conjugate() * attitudeE
-
-    angle3 = 0
-    vector3 = Vector(0,0,0)
-
-    if math.fabs(deltaQ.scalar()) < 0.995:
-        angle3 = 2.0 * math.acos(deltaQ.scalar())
-        vector3 = deltaQ.vector().norm()
-        if angle3 > math.pi:
-            angle3 = 2 * math.pi - angle3
-            vector3 = -vector3
-
-    r3 = Rotation(angle3 * 180.0 / math.pi, vector3.vector())
-    q3 = r3.quaternion()
 
     print 'Initial  :', attitudeI
-    print 'Rotation 1:', attitudeI * q1, r1
-    print 'Rotation 2:', attitudeI * q1 * q2, r2
-    print 'Rotation 3:', attitudeI * q1 * q2 * q3, r3
+    print 'Rotation 1:', attitudeI * rp[0].quaternion(), rp[0]
+    print 'Rotation 2:', attitudeI * rp[0].quaternion() * rp[1].quaternion(), rp[1]
+    print 'Rotation 3:', attitudeI * rp[0].quaternion() * rp[1].quaternion() * rp[2].quaternion(), rp[2]
     print 'Final     :', attitudeE
+
+    # 1st slew
+
+    sa = SlewAttitudeGenerator()
+    sa.set_initial_attitude(attitudeI)
+    sa.set_rotation(rp[0])
+
+    coefficients = [0] * 4
+    coefficients[0] = [0] * 8
+    coefficients[1] = [0] * 8
+    coefficients[2] = [0] * 8
+    coefficients[3] = [0] * 8
+
+    s = [0] * 4
+    steps = 20000000
+    dt = 2.0 / steps
+    t = -1.0  + dt
+    for j in range (steps-1):
+        a = sa.get_intermediate_attitude((t + 1)/2)
+        s[0] = a[0]/math.sqrt(1-t*t)*dt
+        s[1] = a[1]/math.sqrt(1-t*t)*dt
+        s[2] = a[2]/math.sqrt(1-t*t)*dt
+        s[3] = a[3]/math.sqrt(1-t*t)*dt
+#        s[0] = 1/math.sqrt(1-t*t)*dt
+#        s[1] = t/math.sqrt(1-t*t)*dt
+#        s[2] = (2*t*t -1)/math.sqrt(1-t*t)*dt
+#        s[3] = (4*t*t*t - 3*t) /math.sqrt(1-t*t)*dt
+        coefficients[0][0] += s[0]*cheb_0_f(t)/math.pi
+        coefficients[0][1] += s[0]*cheb_1_f(t)*2.0/math.pi
+        coefficients[0][2] += s[0]*cheb_2_f(t)*2.0/math.pi
+        coefficients[0][3] += s[0]*cheb_3_f(t)*2.0/math.pi
+        coefficients[0][4] += s[0]*cheb_4_f(t)*2.0/math.pi
+        coefficients[0][5] += s[0]*cheb_5_f(t)*2.0/math.pi
+        coefficients[0][6] += s[0]*cheb_6_f(t)*2.0/math.pi
+        coefficients[0][7] += s[0]*cheb_7_f(t)*2.0/math.pi
+        coefficients[1][0] += s[1]*cheb_0_f(t)/math.pi
+        coefficients[1][1] += s[1]*cheb_1_f(t)*2.0/math.pi
+        coefficients[1][2] += s[1]*cheb_2_f(t)*2.0/math.pi
+        coefficients[1][3] += s[1]*cheb_3_f(t)*2.0/math.pi
+        coefficients[1][4] += s[1]*cheb_4_f(t)*2.0/math.pi
+        coefficients[1][5] += s[1]*cheb_5_f(t)*2.0/math.pi
+        coefficients[1][6] += s[1]*cheb_6_f(t)*2.0/math.pi
+        coefficients[1][7] += s[1]*cheb_7_f(t)*2.0/math.pi
+        coefficients[2][0] += s[2]*cheb_0_f(t)/math.pi
+        coefficients[2][1] += s[2]*cheb_1_f(t)*2.0/math.pi
+        coefficients[2][2] += s[2]*cheb_2_f(t)*2.0/math.pi
+        coefficients[2][3] += s[2]*cheb_3_f(t)*2.0/math.pi
+        coefficients[2][4] += s[2]*cheb_4_f(t)*2.0/math.pi
+        coefficients[2][5] += s[2]*cheb_5_f(t)*2.0/math.pi
+        coefficients[2][6] += s[2]*cheb_6_f(t)*2.0/math.pi
+        coefficients[2][7] += s[2]*cheb_7_f(t)*2.0/math.pi
+        coefficients[3][0] += s[3]*cheb_0_f(t)/math.pi
+        coefficients[3][1] += s[3]*cheb_1_f(t)*2.0/math.pi
+        coefficients[3][2] += s[3]*cheb_2_f(t)*2.0/math.pi
+        coefficients[3][3] += s[3]*cheb_3_f(t)*2.0/math.pi
+        coefficients[3][4] += s[3]*cheb_4_f(t)*2.0/math.pi
+        coefficients[3][5] += s[3]*cheb_5_f(t)*2.0/math.pi
+        coefficients[3][6] += s[3]*cheb_6_f(t)*2.0/math.pi
+        coefficients[3][7] += s[3]*cheb_7_f(t)*2.0/math.pi
+        t += dt
+
+    print coefficients[0]
+    print coefficients[1]
+    print coefficients[2]
+    print coefficients[3]
+
+    c = [Chebyshev(7), Chebyshev(7), Chebyshev(7), Chebyshev(7)] 
+    for i in range(4):
+        for j in range(8):
+            c[i].add_coefficient(j, coefficients[i][j])
+
+    print c[0].value(-1), c[0].value(1)
+    print c[1].value(-1), c[1].value(1)
+    print c[2].value(-1), c[2].value(1)
+    print c[3].value(-1), c[3].value(1)
 
 if __name__ == '__main__':
     main()

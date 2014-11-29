@@ -1,8 +1,35 @@
 #!/usr/bin/python
 import datetime
 import time
-import time
+import math
 import sys
+
+def cheb_0_f(x):
+    return 1.0
+def cheb_1_f(x):
+    return x
+def cheb_2_f(x):
+    return 2*x*x -1
+def cheb_3_f(x):
+    return 4*x*x*x - 3*x
+def cheb_4_f(x):
+    return 8*x*x*x*x - 8*x*x +1
+def cheb_5_f(x):
+    return 16 * x*x*x*x*x -20 *x*x*x + 5*x
+def cheb_6_f(x):
+    return 32*x*x*x*x*x*x -48 * x*x*x*x + 18*x*x - 1
+def cheb_7_f(x):
+    return 64 *x*x*x*x*x*x*x -112 * x*x*x*x*x + 56 * x*x *x -7*x
+
+cheb_fcn = []
+cheb_fcn.append(cheb_0_f)
+cheb_fcn.append(cheb_1_f)
+cheb_fcn.append(cheb_2_f)
+cheb_fcn.append(cheb_3_f)
+cheb_fcn.append(cheb_4_f)
+cheb_fcn.append(cheb_5_f)
+cheb_fcn.append(cheb_6_f)
+cheb_fcn.append(cheb_7_f)
 
 class Chebyshev:
 
