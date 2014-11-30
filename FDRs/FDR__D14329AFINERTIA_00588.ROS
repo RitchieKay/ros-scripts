@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<planningData>
+<commandRequests>
+<header type="FDR" formatVersion="1">
+	<genTime>2014-328T10:38:34.000Z</genTime>
+	<validityRange type="absoluteTime">
+		<startTime>2014-329T15:15:00.000Z</startTime>
+		<stopTime>2014-329T15:15:00.000Z</stopTime>
+	</validityRange>
+</header>
+<occurrenceList count="0001" creationTime="2014-328T10:38:34Z" author="Flight Dynamics">
+	<sequence name="AACF107A">
+		<uniqueID>F005880001</uniqueID>
+		<insertOrDeleteFlag>Insert</insertOrDeleteFlag>
+		<source>F</source>
+		<destination>S</destination>
+		<executionTime>
+			<actionTime>2014-329T15:15:00.000Z</actionTime>
+		</executionTime>
+		<parameterList count="006">
+			<parameter name="VAC10701" position="1"><value representation="Raw" radix="Decimal"> 0.1695310000434E+05</value><description> (1,1) inertia </description></parameter>
+			<parameter name="VAC10702" position="2"><value representation="Raw" radix="Decimal">-0.8328853826564E+01</value><description> (2,1) (1,2) inertia </description></parameter>
+			<parameter name="VAC10703" position="3"><value representation="Raw" radix="Decimal"> 0.1510236903131E+03</value><description> (3,1) (1,3) inertia </description></parameter>
+			<parameter name="VAC10704" position="4"><value representation="Raw" radix="Decimal"> 0.1762964465917E+04</value><description> (2,2) inertia </description></parameter>
+			<parameter name="VAC10705" position="5"><value representation="Raw" radix="Decimal"> 0.4077576722369E+02</value><description> (3,2), (2,3) inertia </description></parameter>
+			<parameter name="VAC10706" position="6"><value representation="Raw" radix="Decimal"> 0.1655021893987E+05</value><description> (3,3) inertia </description></parameter>
+		</parameterList>
+	</sequence>
+</occurrenceList>
+</commandRequests>
+</planningData>
