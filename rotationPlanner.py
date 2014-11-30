@@ -49,7 +49,7 @@ class RotationPlanner:
               Y = -1
           vector1 = Vector(0, Y, 0)   
         
-        self.rotations[0] = Rotation(angle1 * 180.0 / math.pi, vector1.vector())
+        self.rotations[0] = Rotation(angle1, vector1)
 
         # rotation 2
         spacecraftSunVectorXZ = self.rotations[0].quaternion().conjugate().rotate_vector(spacecraftSunVectorI)
@@ -65,7 +65,7 @@ class RotationPlanner:
             angle2 = math.acos(cos_alpha)
             vector2 = spacecraftSunVectorE.vectorproduct(spacecraftSunVectorXZ).norm()
 
-        self.rotations[1] = Rotation(angle2 * 180.0 / math.pi, vector2.vector())
+        self.rotations[1] = Rotation(angle2, vector2)
 
         # rotation 3
         deltaQ = self.rotations[1].quaternion().conjugate() * self.rotations[0].quaternion().conjugate() * attitudeI.conjugate() * attitudeE
@@ -80,5 +80,5 @@ class RotationPlanner:
                 angle3 = 2 * math.pi - angle3
                 vector3 = -vector3
 
-        self.rotations[2] = Rotation(angle3 * 180.0 / math.pi, vector3.vector())
+        self.rotations[2] = Rotation(angle3, vector3)
 

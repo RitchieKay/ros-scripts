@@ -1,8 +1,9 @@
 #!/usr/bin/python
 import math
+from chebyshev import *
 
 def cheb_0_f(x):
-    return 1.0/math.sqrt(2)
+    return 1.0
 def cheb_1_f(x):
     return x
 def cheb_2_f(x):
@@ -24,26 +25,60 @@ class ChebyshevCalculator:
     def __init__(self, f):
         self.f = f
 
-    def computeCoefficients(self):
+    def computeQuaternionCoefficients(self, steps):
 
-        coefficients = [0] * 8
 
-        steps = 2000000
-        dx = 2.0 / steps
-        x = -1.0  + dx
-        for j in range (steps-1):
-            s = self.f(x)/math.sqrt(1-x*x)*dx*2.0/math.pi
-            coefficients[0] += s*cheb_0_f(x)
-            coefficients[1] += s*cheb_1_f(x)
-            coefficients[2] += s*cheb_2_f(x)
-            coefficients[3] += s*cheb_3_f(x)
-            coefficients[4] += s*cheb_4_f(x)
-            coefficients[5] += s*cheb_5_f(x)
-            coefficients[6] += s*cheb_6_f(x)
-            coefficients[7] += s*cheb_7_f(x)
-            x += dx
+        coefficients = [0] * 4
+        coefficients[0] = [0] * 8
+        coefficients[1] = [0] * 8
+        coefficients[2] = [0] * 8
+        coefficients[3] = [0] * 8
 
-        return coefficients
+        for i in range(steps):
+            xi = math.cos(math.pi*(2*i-1)/steps)
+            a = self.f(xi)
+            coefficients[0][0] += math.pi/steps*a[0]*cheb_0_f(xi)/math.pi
+            coefficients[0][1] += math.pi/steps*a[0]*cheb_1_f(xi)*2.0/math.pi
+            coefficients[0][2] += math.pi/steps*a[0]*cheb_2_f(xi)*2.0/math.pi
+            coefficients[0][3] += math.pi/steps*a[0]*cheb_3_f(xi)*2.0/math.pi
+            coefficients[0][4] += math.pi/steps*a[0]*cheb_4_f(xi)*2.0/math.pi
+            coefficients[0][5] += math.pi/steps*a[0]*cheb_5_f(xi)*2.0/math.pi
+            coefficients[0][6] += math.pi/steps*a[0]*cheb_6_f(xi)*2.0/math.pi
+            coefficients[0][7] += math.pi/steps*a[0]*cheb_7_f(xi)*2.0/math.pi
+
+            coefficients[1][0] += math.pi/steps*a[1]*cheb_0_f(xi)/math.pi
+            coefficients[1][1] += math.pi/steps*a[1]*cheb_1_f(xi)*2.0/math.pi
+            coefficients[1][2] += math.pi/steps*a[1]*cheb_2_f(xi)*2.0/math.pi
+            coefficients[1][3] += math.pi/steps*a[1]*cheb_3_f(xi)*2.0/math.pi
+            coefficients[1][4] += math.pi/steps*a[1]*cheb_4_f(xi)*2.0/math.pi
+            coefficients[1][5] += math.pi/steps*a[1]*cheb_5_f(xi)*2.0/math.pi
+            coefficients[1][6] += math.pi/steps*a[1]*cheb_6_f(xi)*2.0/math.pi
+            coefficients[1][7] += math.pi/steps*a[1]*cheb_7_f(xi)*2.0/math.pi
+
+            coefficients[2][0] += math.pi/steps*a[2]*cheb_0_f(xi)/math.pi
+            coefficients[2][1] += math.pi/steps*a[2]*cheb_1_f(xi)*2.0/math.pi
+            coefficients[2][2] += math.pi/steps*a[2]*cheb_2_f(xi)*2.0/math.pi
+            coefficients[2][3] += math.pi/steps*a[2]*cheb_3_f(xi)*2.0/math.pi
+            coefficients[2][4] += math.pi/steps*a[2]*cheb_4_f(xi)*2.0/math.pi
+            coefficients[2][5] += math.pi/steps*a[2]*cheb_5_f(xi)*2.0/math.pi
+            coefficients[2][6] += math.pi/steps*a[2]*cheb_6_f(xi)*2.0/math.pi
+            coefficients[2][7] += math.pi/steps*a[2]*cheb_7_f(xi)*2.0/math.pi
+
+            coefficients[3][0] += math.pi/steps*a[3]*cheb_0_f(xi)/math.pi
+            coefficients[3][1] += math.pi/steps*a[3]*cheb_1_f(xi)*2.0/math.pi
+            coefficients[3][2] += math.pi/steps*a[3]*cheb_2_f(xi)*2.0/math.pi
+            coefficients[3][3] += math.pi/steps*a[3]*cheb_3_f(xi)*2.0/math.pi
+            coefficients[3][4] += math.pi/steps*a[3]*cheb_4_f(xi)*2.0/math.pi
+            coefficients[3][5] += math.pi/steps*a[3]*cheb_5_f(xi)*2.0/math.pi
+            coefficients[3][6] += math.pi/steps*a[3]*cheb_6_f(xi)*2.0/math.pi
+            coefficients[3][7] += math.pi/steps*a[3]*cheb_7_f(xi)*2.0/math.pi
+
+        c = [Chebyshev(7), Chebyshev(7), Chebyshev(7), Chebyshev(7)]
+        for i in range(4):
+            for j in range(8):
+                c[i].add_coefficient(j, coefficients[i][j])
+
+        return c
 
 def main():
     c = ChebyshevCalculator(cheb_1_f)

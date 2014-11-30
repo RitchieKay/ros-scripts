@@ -26,10 +26,11 @@ class Rotation:
     def quaternion(self):
 
         try:
-            mod = self.vector[0] ** 2 + self.vector[1] ** 2 + self.vector[2] ** 2
-            v = [ math.sin(self.angle*math.pi/2/180) * x / mod for x in self.vector ]
-            s = math.cos(self.angle*math.pi/2/180)
-            return Quaternion(s, v[0], v[1], v[2])
+            mod = self.vector.X() ** 2 + self.vector.Y() ** 2 + self.vector.Z() ** 2
+            v = make_vector_from_list([ math.sin(self.angle/2) * x / mod for x in self.vector ])
+            
+            s = math.cos(self.angle/2)
+            return Quaternion(s, v.X(), v.Y(), v.Z())
         except ZeroDivisionError:
 
             return Quaternion(1, 0, 0, 0)
@@ -143,6 +144,9 @@ class Quaternion:
 
     def scalar(self):
         return self.s 
+
+    def angle(self):
+        return math.acos(self.s) * 2 
 
     def vector(self):
         return Vector(self.v1, self.v2, self.v3)

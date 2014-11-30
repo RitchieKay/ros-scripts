@@ -1,22 +1,22 @@
 
 import math
 
+APME_VALIDITY_RANGE_MIN = [-2.827433, -4.485496]
+APME_VALIDITY_RANGE_MAX = [0.471239, 1.343903]
+
 class apme:
 
     def __init__(self):
-        pass
+        self.set = 1
 
-    def compute_angles(self, earthDirection, attitudeQuarternion):
+    def commanded_position(self, earthDirection, attitudeQuarternion):
 
         elevation = 0
         azimuth = 0
 
         earthDirection = earthDirection.normalize()
-        print earthDirection.Y()
         earthDirection.negate()
-        print earthDirection.Y()
         spacecraftEarthDirection = attitudeQuarternion.rotate_vector(earthDirection)
-        print earthDirection.Y()
 
         if spacecraftEarthDirection.X() == 0.0:
              elevation = - math.pi / 2
@@ -28,10 +28,19 @@ class apme:
 
 
         if spacecraftEarthDirection.X() >= 0.0:
-            print spacecraftEarthDirection.Y()
             azimuth = math.asin(spacecraftEarthDirection.Y())
         else:
-            azimuth = - .0 * math.pi -  math.asin(spacecraftEarthDirection.Y())
+            azimuth = -1 * math.pi -  math.asin(spacecraftEarthDirection.Y())
+
+        cur_cmd_ang_pos_1 = []
+        cur_cmd_ang_pos_2 = []
+
+        cur_cmd_ang_pos_1[0] = elevation
+        cur_cmd_ang_pos_1[1] = azimuth
+        cur_cmd_ang_pos_2[0] = elevation - math.pi
+        cur_cmd_ang_pos_2[1] = azimuth - math.pi
+
+        angle1_valid = cur_cmd_ang_pos_1
 
 
         return elevation * 180 / math.pi, azimuth * 180 / math.pi

@@ -2,6 +2,8 @@
 
 import math
 
+def make_vector_from_list(l):
+    return Vector(l[0], l[1], l[2])
 
 class Vector:
 
@@ -10,7 +12,6 @@ class Vector:
         self.v1 = 1.0 * v1
         self.v2 = 1.0 * v2
         self.v3 = 1.0 * v3
-
 
     def __mul__(self, n):
         return Vector(n* self.v1, n* self.v2, n* self.v3)
@@ -27,7 +28,6 @@ class Vector:
     def __getitem__(self, i):
         return self.vector()[i]
   
-
     def vector(self):
         return [self.v1, self.v2, self.v3] 
 
