@@ -14,6 +14,27 @@ import calendar
 from quaternion import *
 from chebyshev import *
 from vector import *
+from rosettaConfiguration import *
+
+
+class EphemeridesParser:
+
+    def __init__(self, por_file):
+
+        self.sequences = []
+
+        parser = make_parser()
+        curHandler = EventHandler()
+        parser.setContentHandler(curHandler)
+        fh = open(por_file)
+        parser.parse(fh)
+
+        self.sequences += curHandler.get_sequences()
+        fh.close()
+
+    def ephemerides(self):
+        return Ephemerides(self.sequences[0])
+
 
 
 class EphemeridesError(Exception):
@@ -21,6 +42,10 @@ class EphemeridesError(Exception):
         pass
 
 class Ephemerides:
+
+    @staticmethod
+    def makeEphemerides():
+        return EphemeridesParser(RosettaConfiguration().getItem('EPHEMERIDES')).ephemerides()
 
     def __init__(self, sequence):
         if sequence.sequence_name() != 'AACF103A':

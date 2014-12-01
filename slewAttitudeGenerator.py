@@ -54,6 +54,12 @@ class SlewAttitudeGenerator:
     def slewTimes(self):
         return (self.T, self.t1, self.t2)
 
+    def initialAttitude(self):
+        return self.a0
+
+    def finalAttitude(self):
+        return self.a3
+
     def attitudeAtLegs(self):
         return (self.a0, self.a1, self.a2, self.a3)
 

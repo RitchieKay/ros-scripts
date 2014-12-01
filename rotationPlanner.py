@@ -13,14 +13,10 @@ class RotationPlanner:
 
     def __init__(self):
         self.rotations = [0,0,0]
-        self.ephemerides = None
-
-    def set_ephemerides(self, e):
-        self.ephemerides = e
+        self.ephemerides = Ephemerides.makeEphemerides()
 
     def __getitem__(self, i):
         return self.rotations[i]
-
 
     def generate_rotations(self, attitudeI, attitudeE, t):
 
