@@ -8,9 +8,7 @@ from chebyshev import *
 
 class AttitudeProfileParser:
 
-    def __init__(self, por_file):
-
-        self.sequences = []
+    def __init__(self, f):
 
         parser = make_parser()
         curHandler = EventHandler()
@@ -18,11 +16,11 @@ class AttitudeProfileParser:
         fh = open(f)
         parser.parse(fh)
 
-        sequences += curHandler.get_sequences()
+        self.sequences = curHandler.get_sequences()
         fh.close()
 
-    def sequences(self):
-        return sequences
+    def get_sequences(self):
+        return self.sequences
 
 class AttitudeProfileError(Exception):
     def __init__(self):
@@ -40,7 +38,6 @@ class AttitudeProfile:
     def make_from_sequence(sequence):
         if sequence.sequence_name() != 'AACF105A':
 	  raise AttitudeProfileError
-        self.sequence = sequence
 
         p = sequence.get_parameter_map()
 

@@ -53,9 +53,9 @@ class Ephemerides:
         self.sequence = sequence
 
         p = sequence.get_parameter_map()
-        self._starttime = calendar.timegm(datetime.datetime.strptime(p[1].get_value()[0:17], '%Y-%jT%H:%M:%S').timetuple())
+        self._starttime = calendar.timegm(datetime.datetime.strptime(p[1].get_value()[0:17], '%Y-%jT%H:%M:%S').utctimetuple())
         self._starttime += int(p[1].get_value()[18:21]) * 1.0 / 1000
-        self._endtime = calendar.timegm(datetime.datetime.strptime(p[2].get_value()[0:17], '%Y-%jT%H:%M:%S').timetuple())
+        self._endtime = calendar.timegm(datetime.datetime.strptime(p[2].get_value()[0:17], '%Y-%jT%H:%M:%S').utctimetuple())
         self._endtime += int(p[2].get_value()[18:21]) * 1.0 / 1000
 
 

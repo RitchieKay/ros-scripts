@@ -16,7 +16,7 @@ def main():
 
     ephemerides = EphemeridesParser(sys.argv[1]).ephemerides()
 
-    nowTime = calendar.timegm(datetime.datetime.now().timetuple())
+    nowTime = calendar.timegm(datetime.datetime.now().utctimetuple())
 
     eV = ephemerides.earthScVector(nowTime)
     sV = ephemerides.sunScVector(nowTime)

@@ -8,11 +8,28 @@ class AttitudeProfiles:
     def addProfile(self, starttime, endtime, attitudeProfile):
         self.profiles.append({'starttime':starttime, 'endtime':endtime, 'profile':attitudeProfile})
 
+    def addFromFDR(self, fdr):
+        a = AttitudeProfileParser(fdr)
+        sequences = a.get_sequences()
+        for sequence in sequences:
+            try:
+                p = AttitudeProfile.make_from_sequence(sequence)
+                starttime = calendar.timegm(datetime.datetime.strptime(sequence.get_parameter_value(1), "%Y-%jT%H:%M:%S.%fZ").utctimetuple())
+                endtime =  calendar.timegm(datetime.datetime.strptime(sequence.get_parameter_value(2), "%Y-%jT%H:%M:%S.%fZ").utctimetuple())
+                self.profiles.append({'starttime':starttime, 'endtime':endtime, 'profile':p})
+            except AttitudeProfileError:
+                pass
+
     def __getitem__(self, i):
         return self.profiles[i]
 
     def __len__(self):
         return len(self.profiles)
+
+    def getFirstQuaternion(self):
+    
+        return self.getQuaternion(self.profiles[0]['starttime'])
+
 
     def getQuaternion(self, t):
         for profile in self.profiles:

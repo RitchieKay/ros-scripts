@@ -17,7 +17,7 @@ from dorWriter import *
 from aocsModeChanger import *
 
 
-class slewCommandGenerator:
+class SlewCommandGenerator:
 
     def __init__(self):
         self.attitudeProfiles = AttitudeProfiles()
@@ -39,7 +39,7 @@ class slewCommandGenerator:
 
         
         self.attitudeProfiles = AttitudeProfiles()
-        self.starttime = calendar.timegm(starttime.timetuple())
+        self.starttime = calendar.timegm(starttime.utctimetuple())
         currentTime = self.starttime
 
         rp = RotationPlanner()
@@ -129,27 +129,3 @@ class slewCommandGenerator:
     def attitude(self, t):
         return self.attitudeProfiles.getQuaternion(t)
 
-def main():
-
-    config = RosettaConfiguration()
-    q1 = config.getItem('INITIAL_QUARTERNION').strip().split(',') 
-    q2 = config.getItem('FINAL_QUARTERNION').strip().split(',') 
-    starttime = datetime.datetime.strptime(config.getItem('START_TIME'), '%Y-%jT%H:%M:%SZ')
-    attitudeI = Quaternion(float(q1[0]), float(q1[1]), float(q1[2]), float(q1[3]))
-    attitudeE = Quaternion(float(q2[0]), float(q2[1]), float(q2[2]), float(q2[3]))
-
-#    rx = Rotation(-20 * math.pi/180, Vector(0,1,0))
-#   ry = Rotation(20 * math.pi/180, Vector(0,0,1))
-#
-#    attitudeE = attitudeI * rx.quaternion() * ry.quaternion()
-
-    scg = slewCommandGenerator()
-    scg.generateSlewCommands(starttime, attitudeI, attitudeE)
-    scg.addAntennaCommanding()
-    scg.addModeChanges()
-    scg.writeDorFile('DOR__TEST.ROS')
-
-    print 'Final error =', (attitudeE.conjugate() * scg.attitude(scg.end_time())).normalize()
-
-if __name__ == '__main__':
-    main()

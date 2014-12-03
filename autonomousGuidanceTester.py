@@ -20,9 +20,9 @@ def main():
     autoGuid.setPerpendicularToEcliptic()
     autoGuid.setNorthPointing()
     autoGuid.setPointedAxis(Vector(math.cos(35.0),0,math.sin(35.0)))
-    nowTime = calendar.timegm(datetime.datetime.now().timetuple())
+    nowTime = calendar.timegm(datetime.datetime.now().utctimetuple())
     config = RosettaConfiguration()
-    nowTime = calendar.timegm(datetime.datetime.strptime(config.getItem('START_TIME'), '%Y-%jT%H:%M:%SZ').timetuple())
+    nowTime = calendar.timegm(datetime.datetime.strptime(config.getItem('START_TIME'), '%Y-%jT%H:%M:%SZ').utctimetuple())
 
     q = autoGuid.quaternion(nowTime)
 
