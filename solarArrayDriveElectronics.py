@@ -18,9 +18,9 @@ class sade:
 
     def compute_position(self, t, attitudeQuarternion):
 
-        sunDirection = self.ephemerides.sunScVector(t).normalize()
+        sS = self.ephemerides.sunScVector(t).normalize()
         # Calculate spacecraft sun in reference frame
-        spacecraftSunVector =  -attitudeQuarternion.conjugate().rotate_vector(sunDirection.norm()).norm()
+        spacecraftSunVector =  -attitudeQuarternion.conjugate().rotate_vector(sS.norm()).norm()
 
         if (spacecraftSunVector.X() * spacecraftSunVector.X() + spacecraftSunVector.Z() * spacecraftSunVector.Z()) > K_SUN_TOL_SQUARE:
 
@@ -28,7 +28,7 @@ class sade:
             self.position['YM'] = -self.position['YP']
 
 
-    def atan2(self, EX, EY):
+    def atan2(self, EY, EX):
         if EX > 0.0: 
             return math.atan(EY/EX)
         elif EX < 0.0:

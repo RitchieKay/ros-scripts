@@ -13,69 +13,136 @@ from rosettaConfiguration import *
 from attitudeProfiles import *
 from antennaPointingMechanism import * 
 from solarArrayDriveElectronics import * 
+from dorWriter import *
+from aocsModeChanger import *
+
+class slewCommandGenerator:
+
+    def __init__(self):
+        self.attitudeProfiles = AttitudeProfiles()
+        self.starttime = 0
+        self.endtime = 0
+        self.sequences = []
+        self.d = DorWriter()
+
+    def end_time(self):
+        return self.endtime
+
+    def writeDorFile(self, dor):
+       self.d.add_sequences(self.attitudeProfiles.sequences())
+       o = open(dor, 'w')
+       self.d.write(o)
+       o.close()
+
+    def generateSlewCommands(self, starttime, attitudeI, attitudeE):
+
+        self.attitudeProfiles = AttitudeProfiles()
+        self.starttime = calendar.timegm(starttime.timetuple())
+        currentTime = self.starttime
+
+        rp = RotationPlanner()
+        rp.generate_rotations(attitudeI, attitudeE, self.starttime)
+
+        # Create a static profile for the first 10 seconds
+        self.attitudeProfiles.addProfile(currentTime, currentTime + 11, AttitudeProfile.make_from_quaternion(attitudeI))
+        currentTime += 10
+
+        attitude = attitudeI
+        sa = SlewAttitudeGenerator()
+        for slewNo in range(3):
+
+            sa.set_rotation(attitude, rp[slewNo])
+            attitude = sa.finalAttitude()
+            T = sa.slewTimes()
+            print T
+  
+            c = ChebyshevCalculator(sa.get_intermediate_attitude_normalized_t).computeQuaternionCoefficients(1000)
+
+            self.attitudeProfiles.addProfile(currentTime, currentTime + T[0], AttitudeProfile(c[0], c[1], c[2], c[3]))
+            currentTime += T[0]
+
+            qe = Quaternion(c[0].value(1), c[1].value(1), c[2].value(1), c[3].value(1))
+
+            # Create a static profile for the first 10 seconds
+            if slewNo < 2:
+                self.attitudeProfiles.addProfile(currentTime, currentTime + 11, AttitudeProfile.make_from_quaternion(qe))
+            else:
+                self.attitudeProfiles.addProfile(currentTime, currentTime + 86400, AttitudeProfile.make_from_quaternion(qe))
+
+            currentTime += 10
+     
+        self.endtime = currentTime
+ 
+    def addAntennaCommanding(self):
+
+        antenna = apme() 
+        current_set = antenna.current_set()
+        current_set_valid = antenna.current_set_valid()
+        antenna_flip_required = False
+        antenna_off_time = self.endtime + 10
+
+#    solar_array = sade() 
+        for t in range(int(self.starttime), int(self.endtime)):
+            antenna.compute_position(t, self.attitudeProfiles.getQuaternion(t))
+
+            if current_set_valid and not antenna.current_set_valid():
+                current_set_valid = False
+                antenna_flip_required = True 
+            elif not current_set_valid:
+                current_set_valid = True
+
+            if antenna.current_set() != current_set:
+                antenna_flip_required = True 
+                current_set = antenna.current_set()
+
+            if antenna_flip_required and t < antenna_off_time:
+                antenna_off_time = t
+
+        if antenna_flip_required:
+
+            antenna_on_time = self.endtime
+            if antenna_off_time - antenna_on_time < 50 * 60:
+                antenna_on_time = antenna_off_time + 50 * 60
+            sequences = [antenna.hold_sequence(antenna_off_time - 60 )]
+            sequences.append(antenna.command_rotation_sequence(antenna_on_time - 45 * 60, antenna.elevation(), antenna.azimuth()))
+            sequences.append(antenna.on_auto_sequence(antenna_on_time))
+            sequences.append(antenna.set_flag_sequence(antenna_on_time + 50, antenna.current_set()))
+            self.d.add_sequences(sequences)       
+#        solar_array.compute_position(t, attitudeProfiles.getQuaternion(t))
+#        print t - startTime, antenna.current_set(), antenna.elevation(), antenna.azimuth()
+#        print t - startTime, solar_array.yp(), solar_array.ym()
+#        print t - startTime, attitudeProfiles.getQuaternion(t)
+
+    def addModeChanges(self):
+        
+        mc = AocsModeChanger()
+        sequences = [mc.gsep_gsp_sequence(self.starttime + 5), mc.gsp_fpap_sequence(self.endtime + 5)]
+        self.d.add_sequences(sequences)       
+
+    def attitude(self, t):
+        return self.attitudeProfiles.getQuaternion(t)
 
 def main():
 
-    ephemerides = Ephemerides.makeEphemerides()
-    attitudeProfiles = AttitudeProfiles()
+    config = RosettaConfiguration()
+    q1 = config.getItem('INITIAL_QUARTERNION').strip().split(',') 
+    q2 = config.getItem('FINAL_QUARTERNION').strip().split(',') 
+    starttime = datetime.datetime.strptime(config.getItem('START_TIME'), '%Y-%jT%H:%M:%SZ')
+    attitudeI = Quaternion(float(q1[0]), float(q1[1]), float(q1[2]), float(q1[3]))
+    attitudeE = Quaternion(float(q2[0]), float(q2[1]), float(q2[2]), float(q2[3]))
 
-    startTime = calendar.timegm(datetime.datetime.now().timetuple())
-    currentTime = startTime
+#    rx = Rotation(-20 * math.pi/180, Vector(0,1,0))
+#   ry = Rotation(20 * math.pi/180, Vector(0,0,1))
+#
+#    attitudeE = attitudeI * rx.quaternion() * ry.quaternion()
 
-    attitudeI = Quaternion(0.151, -0.429, -0.864, -0.216)
+    scg = slewCommandGenerator()
+    scg.generateSlewCommands(starttime, attitudeI, attitudeE)
+    scg.addAntennaCommanding()
+    scg.addModeChanges()
+    scg.writeDorFile('DOR__TEST.ROS')
 
-    rx = Rotation(20 * math.pi/180, Vector(0,1,0))
-    ry = Rotation(20 * math.pi/180, Vector(1,0,0))
-
-    attitudeE = attitudeI * rx.quaternion() * ry.quaternion()
-
-    rp = RotationPlanner()
-    rp.generate_rotations(attitudeI, attitudeE, startTime)
-
-    print 'Rotation 1 =', rp[0]
-    print 'Rotation 2 =', rp[1]
-    print 'Rotation 3 =', rp[2]
-    print attitudeI * rp[0].quaternion() * rp[1].quaternion() * rp[2].quaternion()
-
-
-    # Create a static profile for the first 10 seconds
-    attitudeProfiles.addProfile(currentTime, currentTime + 10, AttitudeProfile.make_from_quaternion(attitudeI))
-    currentTime += 10
-
-    # 1st slew
-
-    attitude = attitudeI
-    print attitudeI
-    sa = SlewAttitudeGenerator()
-    for slewNo in range(3):
-
-        sa.set_rotation(attitude, rp[slewNo])
-        attitude = sa.finalAttitude()
-        print attitude
-        T = sa.slewTimes()
-  
-        c = ChebyshevCalculator(sa.get_intermediate_attitude_normalized_t).computeQuaternionCoefficients(1000)
-
-        attitudeProfiles.addProfile(currentTime, currentTime + T[0], AttitudeProfile(c[0], c[1], c[2], c[3]))
-        currentTime += T[0]
-
-        qi = Quaternion(c[0].value(-1), c[1].value(-1), c[2].value(-1), c[3].value(-1))
-        qe = Quaternion(c[0].value(1), c[1].value(1), c[2].value(1), c[3].value(1))
-
-        # Create a static profile for the first 10 seconds
-        attitudeProfiles.addProfile(currentTime, currentTime + 10, AttitudeProfile.make_from_quaternion(qe))
-        currentTime += 10
-      
-    antenna = apme() 
-    solar_array = sade() 
-    print '--------------------------------'
-    for t in range(int(startTime), int(currentTime)):
-        antenna.compute_position(t, attitudeProfiles.getQuaternion(t))
-        solar_array.compute_position(t, attitudeProfiles.getQuaternion(t))
-#        print t - startTime, antenna.current_set(), antenna.elevation(), antenna.azimuth()
-        print t - startTime, solar_array.yp(), solar_array.ym()
-
-    print '--------------------------------'
+    print 'Final error =', attitudeE.conjugate() * scg.attitude(scg.end_time())
 
 if __name__ == '__main__':
     main()

@@ -10,6 +10,7 @@ from xml.sax import make_parser
 from xml.sax.handler import ContentHandler
 import datetime
 import re
+import random
 import sys
 
 class SequenceParameter:
@@ -22,18 +23,21 @@ class SequenceParameter:
 
     def set_radix(self, radix):
         self.radix = radix
+        return self
 
     def get_radix(self):
         return self.radix
 
     def set_representation(self, representation):
         self.representation = representation
+        return self
 
     def get_representation(self):
         return self.representation
 
     def set_value(self, value):
         self.value = value
+        return self
 
     def get_value(self):
         return self.value
@@ -46,6 +50,9 @@ class Sequence:
     def __init__(self, name):
         self.name = name
         self.parameters = {}
+
+    def generate_uniqueID(self, char):
+        self.uniqueID = char[0] + str(random.random() * 100000000000)[0:9]
 
     def set_uniqueID(self, uniqueID):
         self.uniqueID = uniqueID
@@ -75,6 +82,10 @@ class Sequence:
 
     def add_parameter(self, position, parameter):
         self.parameters[position] = parameter
+    def update_parameter_value(self, position, value):
+        self.parameters[position].set_value(value)
+    def get_parameter_value(self, position):
+        return self.parameters[position].get_value()
 
     def get_parameter_map(self):
         return self.parameters

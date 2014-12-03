@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import datetime
-import time
+import calendar
 import math
 import sys
 
@@ -45,7 +45,10 @@ class Chebyshev:
             self.coefficients[index] = value
 
     def get_coefficient(self, index):
-        return self.coefficients[index]
+        try:
+            return self.coefficients[index]
+        except IndexError:
+            return 0
 
     def get_coefficients(self):
         return self.coefficients
@@ -100,12 +103,12 @@ class Cheb_Coefficients:
 class Cheb_Normalized_time:
 
     def __init__(self, start_time, end_time):
-        self.start_time = time.mktime(datetime.datetime.strptime(start_time, '%Y.%j.%H.%M.%S').utctimetuple())
-        self.end_time = time.mktime(datetime.datetime.strptime(end_time, '%Y.%j.%H.%M.%S').utctimetuple())
+        self.start_time = calendar.timegm(datetime.datetime.strptime(start_time, '%Y.%j.%H.%M.%S').utctimetuple())
+        self.end_time = calendar.timegm(datetime.datetime.strptime(end_time, '%Y.%j.%H.%M.%S').utctimetuple())
 
 
     def get_t(self, time_str):
-        t = time.mktime(datetime.datetime.strptime(time_str, '%Y.%j.%H.%M.%S').utctimetuple())
+        t = calendar.timegm(datetime.datetime.strptime(time_str, '%Y.%j.%H.%M.%S').utctimetuple())
 
         t1 = 2 * (t - self.start_time) / (self.end_time - self.start_time) - 1
 

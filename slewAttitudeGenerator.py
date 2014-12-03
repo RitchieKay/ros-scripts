@@ -3,7 +3,7 @@ from inertiaParser import *
 from rosettaConfiguration import *
 
 K_INERTIA_TOL = 1.0
-MAX_RATE = 0.0087
+MAX_RATE = 0.00087
 TRQ_CAPACITY = 1.0
 
 class SlewAttitudeGenerator:

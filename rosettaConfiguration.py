@@ -10,7 +10,7 @@ class RosettaConfiguration:
 
     def readConfig(self):
 
-        p = re.compile('([A-z0-9_\-]*)\s+=\s+([A-z0-9_\-/\.]*)')
+        p = re.compile('([A-z0-9_\-]*)\s+=\s+([A-z0-9_\-/\.,: ]*)')
         f = open(configFile)
         for line in f:
 
