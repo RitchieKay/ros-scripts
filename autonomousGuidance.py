@@ -45,8 +45,6 @@ class AutonomousGuidance:
         else:
             v_sc_axis = self._ephemerides.sunScVector(t).normalize().negate()
 
-        
-
         if self._ecliptic:
             v_y_axis = v_sc_axis.vectorproduct(ecliptic_normal).vectorproduct(v_sc_axis)     
         else:

@@ -48,7 +48,10 @@ class Vector:
 
     def norm(self):
         m = self.magnitude()
-        return Vector(self.v1/m, self.v2/m, self.v3/m)
+        if m > 0.0:
+            return Vector(self.v1/m, self.v2/m, self.v3/m)
+        else:
+            return self
 
 
     def normalize(self):

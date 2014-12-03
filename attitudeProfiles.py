@@ -23,6 +23,19 @@ class AttitudeProfiles:
                 nt = 2.0 * pos / span - 1
                 return profile['profile'].intermediate_quaternion(nt)
 
+    def getDeltaQuaternion(self, t, delta):
+        q0 = self.getQuaternion(t)
+        q1 = self.getQuaternion(t + delta)
+        dq = q0.conjugate() * q1
+        return dq
+
+    def getDeltaDeltaQuaternion(self, t, delta):
+        q0 = self.getDeltaQuaternion(t, delta)
+        q1 = self.getDeltaQuaternion(t + delta, delta)
+        dq = q0.conjugate() * q1
+        return dq
+
+
     def sequences(self):
         seqs = []
 

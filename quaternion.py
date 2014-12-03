@@ -73,6 +73,7 @@ class Quaternion:
                 maxVal = v_pq[i]
 
         q0 = q1 = q2 = q3 = 0
+        print index
 
         if index == 0:
             q0 = 0.5 * math.sqrt(v_pq[0])
@@ -99,7 +100,6 @@ class Quaternion:
             q1 =  (T31 + T13) * v_scal
             q2 =  (T32 + T23) * v_scal
              
-
         return Quaternion(q0, q1, q2, q3).normalize()
 
 
@@ -146,6 +146,9 @@ class Quaternion:
         return self.s 
 
     def angle(self):
+        s = self.s
+        if self.s >= 1.0 or self.s <= -1.0:
+            return 0
         return math.acos(self.s) * 2 
 
     def vector(self):

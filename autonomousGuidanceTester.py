@@ -4,6 +4,7 @@ import math
 import datetime
 from ephemeridesParser import *
 from autonomousGuidance import *
+from rosettaConfiguration import *
 
 AU = 149597870.700
 C  = 299792.458
@@ -15,11 +16,13 @@ def main():
         sys.exit(-1)
 
     autoGuid = AutonomousGuidance(EphemeridesParser(sys.argv[1]).ephemerides())
-    autoGuid.setSunPointing()
-    autoGuid.setPerpendicularToSunSpacecraft()
+    autoGuid.setEarthPointing()
+    autoGuid.setPerpendicularToEcliptic()
     autoGuid.setNorthPointing()
-    autoGuid.setPointedAxis(Vector(math.cos(0.0),0,math.sin(0.0)))
+    autoGuid.setPointedAxis(Vector(math.cos(35.0),0,math.sin(35.0)))
     nowTime = calendar.timegm(datetime.datetime.now().timetuple())
+    config = RosettaConfiguration()
+    nowTime = calendar.timegm(datetime.datetime.strptime(config.getItem('START_TIME'), '%Y-%jT%H:%M:%SZ').timetuple())
 
     q = autoGuid.quaternion(nowTime)
 

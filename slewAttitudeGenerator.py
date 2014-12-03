@@ -4,7 +4,7 @@ from rosettaConfiguration import *
 
 K_INERTIA_TOL = 1.0
 MAX_RATE = 0.00087
-TRQ_CAPACITY = 1.0
+TRQ_CAPACITY = 0.05
 
 class SlewAttitudeGenerator:
 
