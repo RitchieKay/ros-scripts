@@ -25,7 +25,7 @@ def main():
     scg.generateSlewCommands(starttime, attitudeI, attitudeE)
     scg.addAntennaCommanding()
     scg.addModeChanges()
-    scg.writeDorFile('DOR__TEST.ROS')
+    scg.writeDorFile('DOR__BRIDGE_TO_FDS.ROS')
 
     print 'Final error =', (attitudeE.conjugate() * scg.attitude(scg.end_time())).normalize()
 

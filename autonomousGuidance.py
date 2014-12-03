@@ -78,6 +78,9 @@ class AutonomousGuidance:
 
         v_z_axis = v_x_axis.vectorproduct(v_y_axis)
 
+        print 'X: ', v_x_axis
+        print 'Y: ', v_y_axis
+        print 'Z: ', v_z_axis
 
         return Quaternion.createFromVectors(v_x_axis, v_y_axis, v_z_axis)
 

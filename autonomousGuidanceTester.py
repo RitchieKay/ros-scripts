@@ -11,15 +11,12 @@ C  = 299792.458
 
 def main():
 
-    if len(sys.argv) < 2:
-        print 'Usage:', sys.argv[0], '<fdr file>'
-        sys.exit(-1)
-
-    autoGuid = AutonomousGuidance(EphemeridesParser(sys.argv[1]).ephemerides())
+    config = RosettaConfiguration()
+    autoGuid = AutonomousGuidance(EphemeridesParser(config.getItem('EPHEMERIDES')).ephemerides())
     autoGuid.setEarthPointing()
     autoGuid.setPerpendicularToEcliptic()
     autoGuid.setNorthPointing()
-    autoGuid.setPointedAxis(Vector(math.cos(35.0),0,math.sin(35.0)))
+    autoGuid.setPointedAxis(Vector(math.cos(math.pi*35.0/180),0,math.sin(math.pi *35.0/180)))
     nowTime = calendar.timegm(datetime.datetime.now().utctimetuple())
     config = RosettaConfiguration()
     nowTime = calendar.timegm(datetime.datetime.strptime(config.getItem('START_TIME'), '%Y-%jT%H:%M:%SZ').utctimetuple())
