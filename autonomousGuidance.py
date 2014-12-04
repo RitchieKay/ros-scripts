@@ -35,21 +35,23 @@ class AutonomousGuidance:
         self._pointedAxis = a
         
     def quaternion(self, t):
-    
+
+
+        qt = calendar.timegm(t.utctimetuple()) 
+
         ecliptic_normal = Vector(0.0,-0.3987,0.9171)
         v_sc_axis = Vector(1,0,0)
         v_y_axis = Vector(0,0,0)
     
         if self._earthPointing:
-            v_sc_axis = self._ephemerides.earthScVector(t).normalize().negate()
+            v_sc_axis = self._ephemerides.earthScVector(qt).normalize().negate()
         else:
-            v_sc_axis = self._ephemerides.sunScVector(t).normalize().negate()
+            v_sc_axis = self._ephemerides.sunScVector(qt).normalize().negate()
 
         if self._ecliptic:
             v_y_axis = v_sc_axis.vectorproduct(ecliptic_normal).vectorproduct(v_sc_axis)     
         else:
-            v_y_axis = self._ephemerides.earthScVector(t).vectorproduct(self._ephemerides.sunScVector(t))
-      
+            v_y_axis = self._ephemerides.earthScVector(qt).vectorproduct(self._ephemerides.sunScVector(qt))
 
         # compute opposite vector if a pointing to the south ecliptic is required
         if not self._yNorth:
@@ -77,10 +79,6 @@ class AutonomousGuidance:
         # Zsc = Xsc x Ysc
 
         v_z_axis = v_x_axis.vectorproduct(v_y_axis)
-
-        print 'X: ', v_x_axis
-        print 'Y: ', v_y_axis
-        print 'Z: ', v_z_axis
 
         return Quaternion.createFromVectors(v_x_axis, v_y_axis, v_z_axis)
 

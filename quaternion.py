@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import math
+import re
 from vector import *
 
 class Rotation:
@@ -45,6 +46,13 @@ class Quaternion:
         self.v3 = 1.0 * v3
 
     @staticmethod
+    def nullQuaternion():
+        return Quaternion(1,0,0,0)
+    @staticmethod
+    def createFromString(s):
+        q = [float(a) for a in re.findall('\d+', s)]
+        return Quaternion(q[0], q[1], q[2], q[3])
+    @staticmethod
     def createFromVectors(v1, v2, v3):
 
         T11 = v1.X()
@@ -73,7 +81,6 @@ class Quaternion:
                 maxVal = v_pq[i]
 
         q0 = q1 = q2 = q3 = 0
-        print index
 
         if index == 0:
             q0 = 0.5 * math.sqrt(v_pq[0])

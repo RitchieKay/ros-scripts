@@ -24,10 +24,16 @@ class SlewCommandGenerator:
         self.starttime = 0
         self.endtime = 0
         self.sequences = []
+        self.rp = RotationPlanner()
+        self.sa = SlewAttitudeGenerator()
+        self.slew_times = []
         self.d = DorWriter()
 
     def end_time(self):
         return self.endtime
+
+    def slewTimes(self, slewNo):
+         return self.slew_times[slewNo]
 
     def writeDorFile(self, dor):
        self.d.add_sequences(self.attitudeProfiles.sequences())
@@ -37,30 +43,28 @@ class SlewCommandGenerator:
 
     def generateSlewCommands(self, starttime, attitudeI, attitudeE):
 
-        
         self.attitudeProfiles = AttitudeProfiles()
         self.starttime = calendar.timegm(starttime.utctimetuple())
         currentTime = self.starttime
 
-        rp = RotationPlanner()
-        rp.generate_rotations(attitudeI, attitudeE, self.starttime)
+        self.rp.generate_rotations(attitudeI, attitudeE, self.starttime)
 
         # Create a static profile for the first 5 minutes
         self.attitudeProfiles.addProfile(currentTime, currentTime + 302, AttitudeProfile.make_from_quaternion(attitudeI))
         currentTime += 300
 
         attitude = attitudeI
-        sa = SlewAttitudeGenerator()
+        self.slew_times = []
         for slewNo in range(3):
 
-            sa.set_rotation(attitude, rp[slewNo])
-            attitude = sa.finalAttitude()
-            T = sa.slewTimes()
-            print T
+            self.sa.set_rotation(attitude, self.rp[slewNo])
+            attitude = self.sa.finalAttitude()
+            T = self.sa.slewTimes()
+            self.slew_times.append(T)
 
             if T[0] > 0:
   
-                c = ChebyshevCalculator(sa.get_intermediate_attitude_normalized_t).computeQuaternionCoefficients(1000)
+                c = ChebyshevCalculator(self.sa.get_intermediate_attitude_normalized_t).computeQuaternionCoefficients(1000)
                 self.attitudeProfiles.addProfile(currentTime, currentTime + T[0], AttitudeProfile(c[0], c[1], c[2], c[3]))
                 currentTime += T[0]
 
@@ -87,7 +91,6 @@ class SlewCommandGenerator:
 
 #    solar_array = sade() 
         for t in range(int(self.starttime), int(self.endtime)):
-#            print t  - self.starttime, self.attitudeProfiles.getQuaternion(t)
             dQ =  self.attitudeProfiles.getDeltaDeltaQuaternion(t, 1)
 
 #            print t  - self.starttime, dQ.angle(), dQ.vector().normalize()
