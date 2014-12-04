@@ -159,7 +159,7 @@ class Quaternion:
         return math.acos(self.s) * 2 
 
     def vector(self):
-        return Vector(self.v1, self.v2, self.v3)
+        return Vector(self.v1, self.v2, self.v3).normalize()
 
     def print_profile_coefficients(self, q2):
 

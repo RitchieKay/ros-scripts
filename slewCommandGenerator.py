@@ -28,9 +28,16 @@ class SlewCommandGenerator:
         self.sa = SlewAttitudeGenerator()
         self.slew_times = []
         self.d = DorWriter()
+        self.config = RosettaConfiguration()
+
+    def attitude_profiles(self):
+        return self.attitudeProfiles
 
     def end_time(self):
         return self.endtime
+
+    def start_time(self):
+        return self.starttime
 
     def slewTimes(self, slewNo):
          return self.slew_times[slewNo]
