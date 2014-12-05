@@ -23,6 +23,8 @@ def main():
     parser.add_option("-s", "--sade-file", dest="sadefile", help="Dump SADE angles to file")
     parser.add_option("-a", "--apme-file", dest="apmefile", help="Dump AMPE angles to file")
     parser.add_option("-w", "--wheel-file", dest="wheelfile", help="Dump wheel speeds to file")
+    parser.add_option("-T", "--torque-capacity", dest="torque_capacity", help="Manually adjust the torque capacity. Default = 0.05. Higher value means higher acceleration.")
+    parser.add_option("-R", "--max-rate", dest="max_rate", help="Manually adjust the maximum rotation rate. Default = 0.00087 Higher value means higher rotation speeds.")
 
     (options, args) = parser.parse_args()
     
@@ -41,6 +43,13 @@ def main():
         sys.exit(-1)
 
     scg = SlewCommandGenerator()
+
+    if options.torque_capacity:
+       scg.set_torque_capacity(float(options.torque_capacity))
+
+    if options.max_rate:
+       scg.set_max_rate(float(options.max_rate))
+
     scg.generateSlewCommands(starttime, attitudeI, attitudeE)
     scg.addAntennaCommanding()
     scg.addModeChanges()
@@ -88,13 +97,13 @@ def wheel_speeds(filename, scg):
     for i in range(int(scg.end_time() -scg.start_time())*4):
         ts = scg.start_time() + float(i)/4
         tf = scg.start_time() + float(i+1)/4
-        ti = (ts + tf)/2
     
         qs = scg.attitude_profiles().getQuaternion(ts)
-        qi = scg.attitude_profiles().getQuaternion(ti)
+        qsd = scg.attitude_profiles().getDeltaQuaternion(ts, tf-ts)
         qf = scg.attitude_profiles().getQuaternion(tf)
+        qfd = scg.attitude_profiles().getDeltaQuaternion(tf, tf-ts)
         
-        ang_mom_vector = wheels.compute_wheel_speeds(qs, qi, qf)
+        ang_mom_vector = wheels.compute_wheel_speeds(qs, qsd, qf, qfd, 0.25)
         if i % 4 == 0:
             print >> f, float(i)/4, ang_mom_vector[0], ang_mom_vector[1], ang_mom_vector[2], ang_mom_vector[3]
     f.close()

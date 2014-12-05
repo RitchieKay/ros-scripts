@@ -50,7 +50,7 @@ class Quaternion:
         return Quaternion(1,0,0,0)
     @staticmethod
     def createFromString(s):
-        q = [float(a) for a in re.findall('\d+', s)]
+        q = [float(a) for a in re.findall('[\d\.]+', s)]
         return Quaternion(q[0], q[1], q[2], q[3])
     @staticmethod
     def createFromVectors(v1, v2, v3):
@@ -145,8 +145,8 @@ class Quaternion:
         qp = q.conjugate()
 
         x = q * Quaternion(0,v.X(),v.Y(),v.Z()) * qp
-        
-        return x.vector() 
+ 
+        return x.vector()
 
 
     def scalar(self):
@@ -159,7 +159,7 @@ class Quaternion:
         return math.acos(self.s) * 2 
 
     def vector(self):
-        return Vector(self.v1, self.v2, self.v3).normalize()
+        return Vector(self.v1, self.v2, self.v3)
 
     def print_profile_coefficients(self, q2):
 

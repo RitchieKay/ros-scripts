@@ -30,6 +30,12 @@ class SlewCommandGenerator:
         self.d = DorWriter()
         self.config = RosettaConfiguration()
 
+    def set_torque_capacity(self, trq):
+        self.sa.set_torque_capacity(trq)
+
+    def set_max_rate(self, rate):
+        self.sa.set_max_rate(rate)
+
     def attitude_profiles(self):
         return self.attitudeProfiles
 

@@ -40,6 +40,8 @@ class rwa:
         self.isolated_wheel = 0
         self.four_wheels = True
         self.inertia = InertiaParser(RosettaConfiguration().getItem('INERTIA')).inertia()
+        self.set_four_wheels(RosettaConfiguration().getItem('FOUR_WHEELS') == 'TRUE')
+        self.set_isolated_wheel(int(RosettaConfiguration().getItem('ISOLATED_WHEEL')))
 
     def set_ang_mom_vector(self, v):
         self.ang_mom_vector = v
@@ -70,61 +72,97 @@ class rwa:
 
         return q.conjugate().rotate_vector(self.get_ang_mom_in_sc_frame())
 
-    def compute_wheel_speeds(self, qs, qi, qf):
+    # Arguments are the attitude quaternion and delta quaternion @ time s & f 
+    # together with the time interval represented by the delta
 
-        dQ_i= qs.conjugate() * qi
-        angle_i = dQ_i.angle()
-        vector_i = dQ_i.vector()
+    def compute_wheel_speeds(self, qs, dQs, qf, dQf, dt):
 
-        sc_ang_velocity_i= vector_i * angle_i 
-        sc_ang_mom_i     = self.inertia.Iw(sc_ang_velocity_i)
-        sc_ang_mom_in_j2000_frame_i = qi.conjugate().rotate_vector(sc_ang_mom_i)
+        # First compute the angular momentum of the spacecraft in the J2000 frame at the time
+        # represented by the quaternion qs and the time represented by the quaternion qf
+      
+        angle_s = dQs.angle()
+        vector_s = dQs.vector()
 
-        dQ_f= qi.conjugate() * qf
-        angle_f = dQ_f.angle()
-        vector_f = dQ_f.vector()
+        sc_ang_velocity_s= vector_s.normalize() * (angle_s/dt)
+        sc_ang_mom_s     = self.inertia.Iw(sc_ang_velocity_s)
+        sc_ang_mom_in_j2000_frame_s = qs.conjugate().rotate_vector(sc_ang_mom_s)
 
-        sc_ang_velocity_f= vector_f * angle_f
+        angle_f = dQf.angle()
+        vector_f = dQf.vector()
+
+        sc_ang_velocity_f= vector_f.normalize() * (angle_f/dt)
         sc_ang_mom_f     = self.inertia.Iw(sc_ang_velocity_f)
         sc_ang_mom_in_j2000_frame_f = qf.conjugate().rotate_vector(sc_ang_mom_f)
+
+        # Now we compute the delta in the spacecraft angular momentum in the J2000 frame
+        # This is the first component that needs to be applied to the wheels
  
-        d_sc_ang_mom_in_j2000_frame = sc_ang_mom_in_j2000_frame_f - sc_ang_mom_in_j2000_frame_i
-        print d_sc_ang_mom_in_j2000_frame
+        d_sc_ang_mom_in_j2000_frame = sc_ang_mom_in_j2000_frame_f - sc_ang_mom_in_j2000_frame_s
 
-        rwa_ang_mom_in_j2000_frame = self.get_ang_mom_in_j2000_frame(qs) - d_sc_ang_mom_in_j2000_frame
+        # Now we compute the change in the angular momentum of the wheels as a result of the
+        # rotation of the spacecraft body from qs to qf
 
+        rwa_ang_mom_in_j2000_frame_s = self.get_ang_mom_in_j2000_frame(qs)
+        rwa_ang_mom_in_j2000_frame_f = self.get_ang_mom_in_j2000_frame(qf)
 
-        rwa_ang_mom_in_sc_frame = qf.rotate_vector(rwa_ang_mom_in_j2000_frame)
+        d_rwa_ang_mom_in_j2000_frame = rwa_ang_mom_in_j2000_frame_f - rwa_ang_mom_in_j2000_frame_s
 
-        self.individual_wheel_speeds(rwa_ang_mom_in_sc_frame)
+        # 1: If there is no change in the spacecraft angular momentum then the wheel speeds still
+        #    need to change to keep the total reaction wheel angular momentum in the J2000 frame
+        #    the same despite the rotation of their orientation.
+        #    This difference must be applied to the wheels
+
+        factor_1 = -(rwa_ang_mom_in_j2000_frame_f - rwa_ang_mom_in_j2000_frame_s)
+
+        # 2: Any change in spacecraft angular momentum must be directly compensated by the wheels:
+
+        factor_2 = -d_sc_ang_mom_in_j2000_frame
+
+        # These two things are combined, transferred back into the spacecraft frame and then applied
+        # to the wheels
+
+        rwa_ang_mon_delta_in_sc_frame = qf.rotate_vector(factor_1 + factor_2)
+
+        # Project this onto the wheels ...
+
+        ang_mom_vector = self.individual_wheel_speeds(rwa_ang_mon_delta_in_sc_frame)
+
+        # ... and add onto the current wheel speeds
+
+        self.ang_mom_vector = [self.ang_mom_vector[i] + ang_mom_vector[i] for i in range(4)]
 
         return self.ang_mom_vector
 
     def individual_wheel_speeds(self, rwa_ang_mom_in_sc_frame):
 
         sc_to_rw_mat = [[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
-        if self.isolated_wheel == 1:
-            sc_to_rw_mat = sc_to_rw_mat_1off
-        elif self.isolated_wheel == 2:
-            sc_to_rw_mat = sc_to_rw_mat_2off
-        elif self.isolated_wheel == 3:
-            sc_to_rw_mat = sc_to_rw_mat_3off
-        elif self.isolated_wheel == 4:
-            sc_to_rw_mat = sc_to_rw_mat_4off
-        elif self.isolated_wheel == 0:
+
+        if self.four_wheels:
             sc_to_rw_mat = sc_to_rw_mat_all
+        else:
+     
+            if self.isolated_wheel == 1:
+                sc_to_rw_mat = sc_to_rw_mat_1off
+            elif self.isolated_wheel == 2:
+                sc_to_rw_mat = sc_to_rw_mat_2off
+            elif self.isolated_wheel == 3:
+                sc_to_rw_mat = sc_to_rw_mat_3off
+            elif self.isolated_wheel == 4:
+                sc_to_rw_mat = sc_to_rw_mat_4off
 
+        ang_mom_vector = [0, 0, 0, 0]
 
-        self.ang_mom_vector[0] = sc_to_rw_mat[0][0] * rwa_ang_mom_in_sc_frame[0] +\
-                                 sc_to_rw_mat[0][1] * rwa_ang_mom_in_sc_frame[1] +\
-                                 sc_to_rw_mat[0][2] * rwa_ang_mom_in_sc_frame[2] 
-        self.ang_mom_vector[1] = sc_to_rw_mat[1][0] * rwa_ang_mom_in_sc_frame[0] +\
-                                 sc_to_rw_mat[1][1] * rwa_ang_mom_in_sc_frame[1] +\
-                                 sc_to_rw_mat[1][2] * rwa_ang_mom_in_sc_frame[2] 
-        self.ang_mom_vector[2] = sc_to_rw_mat[2][0] * rwa_ang_mom_in_sc_frame[0] +\
-                                 sc_to_rw_mat[2][1] * rwa_ang_mom_in_sc_frame[1] +\
-                                 sc_to_rw_mat[2][2] * rwa_ang_mom_in_sc_frame[2] 
-        self.ang_mom_vector[3] = sc_to_rw_mat[3][0] * rwa_ang_mom_in_sc_frame[0] +\
-                                 sc_to_rw_mat[3][1] * rwa_ang_mom_in_sc_frame[1] +\
-                                 sc_to_rw_mat[3][2] * rwa_ang_mom_in_sc_frame[2] 
+        ang_mom_vector[0] = sc_to_rw_mat[0][0] * rwa_ang_mom_in_sc_frame[0] +\
+                            sc_to_rw_mat[0][1] * rwa_ang_mom_in_sc_frame[1] +\
+                            sc_to_rw_mat[0][2] * rwa_ang_mom_in_sc_frame[2] 
+        ang_mom_vector[1] = sc_to_rw_mat[1][0] * rwa_ang_mom_in_sc_frame[0] +\
+                            sc_to_rw_mat[1][1] * rwa_ang_mom_in_sc_frame[1] +\
+                            sc_to_rw_mat[1][2] * rwa_ang_mom_in_sc_frame[2] 
+        ang_mom_vector[2] = sc_to_rw_mat[2][0] * rwa_ang_mom_in_sc_frame[0] +\
+                            sc_to_rw_mat[2][1] * rwa_ang_mom_in_sc_frame[1] +\
+                            sc_to_rw_mat[2][2] * rwa_ang_mom_in_sc_frame[2] 
+        ang_mom_vector[3] = sc_to_rw_mat[3][0] * rwa_ang_mom_in_sc_frame[0] +\
+                            sc_to_rw_mat[3][1] * rwa_ang_mom_in_sc_frame[1] +\
+                            sc_to_rw_mat[3][2] * rwa_ang_mom_in_sc_frame[2] 
 
+        return ang_mom_vector

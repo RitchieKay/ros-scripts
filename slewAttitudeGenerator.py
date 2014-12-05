@@ -12,6 +12,14 @@ class SlewAttitudeGenerator:
         self.rotation = None
         self.inertia = InertiaParser(RosettaConfiguration().getItem('INERTIA')).inertia()
         self.legs = 0
+        self.trqCapacity = TRQ_CAPACITY
+        self.maxRate = MAX_RATE
+
+    def set_torque_capacity(self, trq):
+        self.trqCapacity = trq
+
+    def set_max_rate(self, rate):
+        self.maxRate = rate
 
     def set_rotation(self, a0, r):
         self.angle = r.angle
@@ -20,8 +28,8 @@ class SlewAttitudeGenerator:
         rot_axis_inertia = self.inertia.Iw(self.vector).magnitude()
 
         if rot_axis_inertia > K_INERTIA_TOL and self.angle > 0:
-            self.max_rate = MAX_RATE
-            self.accel  = TRQ_CAPACITY / rot_axis_inertia 
+            self.max_rate = self.maxRate
+            self.accel  = self.trqCapacity / rot_axis_inertia 
 
             K = math.sqrt(self.angle / self.accel)
 
