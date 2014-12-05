@@ -2,6 +2,7 @@
 import sys
 import math
 import datetime
+from solarArrayDriveElectronics import *
 from ephemeridesParser import *
 from autonomousGuidance import *
 from quaternion import *
@@ -25,7 +26,6 @@ class RotationPlanner:
         spacecraftSunVectorI =  -attitudeI.conjugate().rotate_vector(sV.norm()).norm()
         spacecraftSunVectorE =  -attitudeE.conjugate().rotate_vector(sV.norm()).norm()
 
-
         # rotation 1
         numerator = spacecraftSunVectorI.X()*spacecraftSunVectorE.X() + spacecraftSunVectorI.Z()*spacecraftSunVectorE.Z()
         denominator = math.sqrt(spacecraftSunVectorI.X()*spacecraftSunVectorI.X() + spacecraftSunVectorI.Z()*spacecraftSunVectorI.Z()) * \
@@ -44,7 +44,15 @@ class RotationPlanner:
           if sign > 0:
               Y = -1
           vector1 = Vector(0, Y, 0)   
-        
+
+        s = sade()
+        (yp0, ym0) = s.compute_position(t, attitudeI)
+       
+        if yp0 + angle1 > math.pi:
+            angle1 -= 2 * math.pi
+        elif yp0 + angle1 < -math.pi:
+            angle1 += 2 * math.pi
+
         self.rotations[0] = Rotation(angle1, vector1)
 
         # rotation 2

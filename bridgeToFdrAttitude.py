@@ -20,9 +20,9 @@ def main():
     parser.add_option("-t", "--start-time", dest="time_str", help="Specify time YYYY-DDDTHH:MM:SSZ")
     parser.add_option("-A", "--auto", action="store_true", dest="auto", help="Obtain initial and final attitude from configuration")
     parser.add_option("-d", "--dor-file", default="DOR__BRIDGE_TO_FDS.ROS", dest="dorfile", help="Output DOR file")
-    parser.add_option("-s", "--sade-file", dest="sadefile", help="Dump SADE angles to file")
-    parser.add_option("-a", "--apme-file", dest="apmefile", help="Dump AMPE angles to file")
-    parser.add_option("-w", "--wheel-file", dest="wheelfile", help="Dump wheel speeds to file")
+    parser.add_option("-s", "--sade-file", action="store_true", dest="sadefile", help="Dump SADE angles to file")
+    parser.add_option("-a", "--apme-file", action="store_true", dest="apmefile", help="Dump AMPE angles to file")
+    parser.add_option("-w", "--wheel-file", action="store_true", dest="wheelfile", help="Dump wheel speeds to file")
     parser.add_option("-T", "--torque-capacity", dest="torque_capacity", help="Manually adjust the torque capacity. Default = 0.05. Higher value means higher acceleration.")
     parser.add_option("-R", "--max-rate", dest="max_rate", help="Manually adjust the maximum rotation rate. Default = 0.00087 Higher value means higher rotation speeds.")
 
@@ -63,11 +63,11 @@ def main():
         print 'SLEW', i, 'times    :', scg.slewTimes(i)
 
     if options.sadefile:
-        sade_angles(options.sadefile, scg)
+        sade_angles('sade.txt', scg)
     if options.apmefile:
-        apme_angles(options.apmefile, scg)
+        apme_angles('apme.txt', scg)
     if options.wheelfile:
-        wheel_speeds(options.wheelfile, scg)
+        wheel_speeds('wheels.txt', scg)
 
 def sade_angles(filename, scg):
 
@@ -85,7 +85,7 @@ def apme_angles(filename, scg):
     antenna = apme()
     for t in range(int(scg.start_time()), int(scg.end_time())):
         antenna.compute_position(t, scg.attitude_profiles().getQuaternion(t))
-        print >> f, t - scg.start_time(), antenna.current_set(), antenna.elevation(), antenna.azimuth()
+        print >> f, t - scg.start_time(), 2 - int(antenna.current_set()=="SET_1"), antenna.elevation(), antenna.azimuth()
     f.close()
 
 def wheel_speeds(filename, scg):
@@ -94,18 +94,17 @@ def wheel_speeds(filename, scg):
     wheels = rwa()
     wheels.set_ang_mom_vector([float(config.getItem('RWA_ANG_MON_1')), float(config.getItem('RWA_ANG_MON_2')), float(config.getItem('RWA_ANG_MON_3')), float(config.getItem('RWA_ANG_MON_4'))])
 
-    for i in range(int(scg.end_time() -scg.start_time())*4):
-        ts = scg.start_time() + float(i)/4
-        tf = scg.start_time() + float(i+1)/4
+    for i in range(int(scg.end_time() -scg.start_time())):
+        ts = scg.start_time() + float(i)
+        tf = scg.start_time() + float(i+1)
     
         qs = scg.attitude_profiles().getQuaternion(ts)
-        qsd = scg.attitude_profiles().getDeltaQuaternion(ts, tf-ts)
+        qsd = scg.attitude_profiles().getDeltaQuaternion(ts, 0.25)
         qf = scg.attitude_profiles().getQuaternion(tf)
-        qfd = scg.attitude_profiles().getDeltaQuaternion(tf, tf-ts)
+        qfd = scg.attitude_profiles().getDeltaQuaternion(tf, 0.25)
         
         ang_mom_vector = wheels.compute_wheel_speeds(qs, qsd, qf, qfd, 0.25)
-        if i % 4 == 0:
-            print >> f, float(i)/4, ang_mom_vector[0], ang_mom_vector[1], ang_mom_vector[2], ang_mom_vector[3]
+        print >> f, float(i)/4, ang_mom_vector[0], ang_mom_vector[1], ang_mom_vector[2], ang_mom_vector[3]
     f.close()
 
 def autoAttitude():

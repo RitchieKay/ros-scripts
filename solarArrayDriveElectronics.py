@@ -27,6 +27,8 @@ class sade:
             self.position['YP'] = self.atan2(spacecraftSunVector.Z(), spacecraftSunVector.X())
             self.position['YM'] = -self.position['YP']
 
+        return (self.ym(), self.yp())
+
 
     def atan2(self, EY, EX):
         if EX > 0.0: 
