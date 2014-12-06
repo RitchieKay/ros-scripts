@@ -77,7 +77,7 @@ def sade_angles(filename, scg):
     f = open(filename, 'w')
     solar_array = sade()
     for t in range(int(scg.start_time()), int(scg.end_time())):
-        solar_array.compute_position(t, scg.attitude_profiles().getQuaternion(t))
+        solar_array.compute_position(t, scg.attitude_profiles().quaternion(t))
         print >> f, t - scg.start_time(), solar_array.yp(), solar_array.ym()
     f.close()
 
