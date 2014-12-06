@@ -10,11 +10,7 @@ C  = 299792.458
 
 def main():
 
-    if len(sys.argv) < 2:
-        print 'Usage:', sys.argv[0], '<fdr file>'
-        sys.exit(-1)
-
-    ephemerides = EphemeridesParser(sys.argv[1]).ephemerides()
+    ephemerides = Ephemerides.makeEphemerides()
 
     nowTime = calendar.timegm(datetime.datetime.now().utctimetuple())
 

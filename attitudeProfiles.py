@@ -1,4 +1,5 @@
 from attitudeProfile import *
+from rosettaConfiguration import *
 
 class AttitudeProfiles:
 
@@ -8,17 +9,20 @@ class AttitudeProfiles:
     def addProfile(self, starttime, endtime, attitudeProfile):
         self.profiles.append({'starttime':starttime, 'endtime':endtime, 'profile':attitudeProfile})
 
-    def addFromFDR(self, fdr):
-        a = AttitudeProfileParser(fdr)
+    @staticmethod
+    def makeAttitudeProfiles():
+        a = AttitudeProfileParser(RosettaConfiguration().getItem('PROFILES'))
         sequences = a.get_sequences()
+        profiles = AttitudeProfiles()
         for sequence in sequences:
             try:
                 p = AttitudeProfile.make_from_sequence(sequence)
                 starttime = calendar.timegm(datetime.datetime.strptime(sequence.get_parameter_value(1), "%Y-%jT%H:%M:%S.%fZ").utctimetuple())
                 endtime =  calendar.timegm(datetime.datetime.strptime(sequence.get_parameter_value(2), "%Y-%jT%H:%M:%S.%fZ").utctimetuple())
-                self.profiles.append({'starttime':starttime, 'endtime':endtime, 'profile':p})
+                profiles.addProfile(starttime, endtime, p)
             except AttitudeProfileError:
                 pass
+        return profiles
 
     def __getitem__(self, i):
         return self.profiles[i]
@@ -26,12 +30,17 @@ class AttitudeProfiles:
     def __len__(self):
         return len(self.profiles)
 
-    def getFirstQuaternion(self):
-    
-        return self.getQuaternion(self.profiles[0]['starttime'])
+    def first_quaternion(self):
+        return self.quaternion(self.profiles[0]['starttime'])
+    def last_quaternion(self):
+        return self.quaternion(self.profiles[-1]['endtime'])
 
+    def start_time(self):
+        return self.profiles[0]['starttime']
+    def end_time(self):
+        return self.profiles[-1]['endtime']
 
-    def getQuaternion(self, t):
+    def quaternion(self, t):
         for profile in self.profiles:
             
             if t >= profile['starttime'] and t < profile['endtime']:
@@ -40,15 +49,15 @@ class AttitudeProfiles:
                 nt = 2.0 * pos / span - 1
                 return profile['profile'].intermediate_quaternion(nt)
 
-    def getDeltaQuaternion(self, t, delta):
-        q0 = self.getQuaternion(t)
-        q1 = self.getQuaternion(t + delta)
+    def deltaQuaternion(self, t, delta):
+        q0 = self.quaternion(t)
+        q1 = self.quaternion(t + delta)
         dq = q0.conjugate() * q1
         return dq
 
-    def getDeltaDeltaQuaternion(self, t, delta):
-        q0 = self.getDeltaQuaternion(t, delta)
-        q1 = self.getDeltaQuaternion(t + delta, delta)
+    def deltaDeltaQuaternion(self, t, delta):
+        q0 = self.deltaQuaternion(t, delta)
+        q1 = self.deltaQuaternion(t + delta, delta)
         dq = q0.conjugate() * q1
         return dq
 

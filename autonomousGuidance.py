@@ -36,7 +36,6 @@ class AutonomousGuidance:
         
     def quaternion(self, t):
 
-
         qt = calendar.timegm(t.utctimetuple()) 
 
         ecliptic_normal = Vector(0.0,-0.3987,0.9171)

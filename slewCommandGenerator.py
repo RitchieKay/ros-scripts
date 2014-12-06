@@ -104,10 +104,10 @@ class SlewCommandGenerator:
 
 #    solar_array = sade() 
         for t in range(int(self.starttime), int(self.endtime)):
-            dQ =  self.attitudeProfiles.getDeltaDeltaQuaternion(t, 1)
+            dQ =  self.attitudeProfiles.deltaDeltaQuaternion(t, 1)
 
 #            print t  - self.starttime, dQ.angle(), dQ.vector().normalize()
-            antenna.compute_position(t, self.attitudeProfiles.getQuaternion(t))
+            antenna.compute_position(t, self.attitudeProfiles.quaternion(t))
 
             if current_set_valid and not antenna.current_set_valid():
                 current_set_valid = False
@@ -143,5 +143,5 @@ class SlewCommandGenerator:
         self.d.add_sequences(sequences)       
 
     def attitude(self, t):
-        return self.attitudeProfiles.getQuaternion(t)
+        return self.attitudeProfiles.quaternion(t)
 

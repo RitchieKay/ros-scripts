@@ -23,6 +23,7 @@ def main():
     parser.add_option("-s", "--sade-file", action="store_true", dest="sadefile", help="Dump SADE angles to file")
     parser.add_option("-a", "--apme-file", action="store_true", dest="apmefile", help="Dump AMPE angles to file")
     parser.add_option("-w", "--wheel-file", action="store_true", dest="wheelfile", help="Dump wheel speeds to file")
+    parser.add_option("-q", "--quaternion-file", action="store_true", dest="quaternionfile", help="Dump quaternion profiles to file")
     parser.add_option("-T", "--torque-capacity", dest="torque_capacity", help="Manually adjust the torque capacity. Default = 0.05. Higher value means higher acceleration.")
     parser.add_option("-R", "--max-rate", dest="max_rate", help="Manually adjust the maximum rotation rate. Default = 0.00087 Higher value means higher rotation speeds.")
 
@@ -68,6 +69,8 @@ def main():
         apme_angles('apme.txt', scg)
     if options.wheelfile:
         wheel_speeds('wheels.txt', scg)
+    if options.quaternionfile:
+        quaternions('quaternions.txt', scg)
 
 def sade_angles(filename, scg):
 
@@ -75,7 +78,6 @@ def sade_angles(filename, scg):
     solar_array = sade()
     for t in range(int(scg.start_time()), int(scg.end_time())):
         solar_array.compute_position(t, scg.attitude_profiles().getQuaternion(t))
-#        print t - startTime, antenna.current_set(), antenna.elevation(), antenna.azimuth()
         print >> f, t - scg.start_time(), solar_array.yp(), solar_array.ym()
     f.close()
 
@@ -84,7 +86,7 @@ def apme_angles(filename, scg):
     f = open(filename, 'w')
     antenna = apme()
     for t in range(int(scg.start_time()), int(scg.end_time())):
-        antenna.compute_position(t, scg.attitude_profiles().getQuaternion(t))
+        antenna.compute_position(t, scg.attitude_profiles().quaternion(t))
         print >> f, t - scg.start_time(), 2 - int(antenna.current_set()=="SET_1"), antenna.elevation(), antenna.azimuth()
     f.close()
 
@@ -98,13 +100,22 @@ def wheel_speeds(filename, scg):
         ts = scg.start_time() + float(i)
         tf = scg.start_time() + float(i+1)
     
-        qs = scg.attitude_profiles().getQuaternion(ts)
-        qsd = scg.attitude_profiles().getDeltaQuaternion(ts, 0.25)
-        qf = scg.attitude_profiles().getQuaternion(tf)
-        qfd = scg.attitude_profiles().getDeltaQuaternion(tf, 0.25)
+        qs = scg.attitude_profiles().quaternion(ts)
+        qsd = scg.attitude_profiles().deltaQuaternion(ts, 0.25)
+        qf = scg.attitude_profiles().quaternion(tf)
+        qfd = scg.attitude_profiles().deltaQuaternion(tf, 0.25)
         
         ang_mom_vector = wheels.compute_wheel_speeds(qs, qsd, qf, qfd, 0.25)
-        print >> f, float(i)/4, ang_mom_vector[0], ang_mom_vector[1], ang_mom_vector[2], ang_mom_vector[3]
+        print >> f, float(i), ang_mom_vector[0], ang_mom_vector[1], ang_mom_vector[2], ang_mom_vector[3]
+    f.close()
+
+def quaternions(filename, scg):
+
+    f = open(filename, 'w')
+    solar_array = sade()
+    for t in range(int(scg.start_time()), int(scg.end_time())):
+        q = scg.attitude_profiles().quaternion(t)
+        print >> f, t - scg.start_time(), q[0], q[1], q[2], q[3]
     f.close()
 
 def autoAttitude():
@@ -114,10 +125,9 @@ def autoAttitude():
     attitudeI = Quaternion(float(q1[0]), float(q1[1]), float(q1[2]), float(q1[3]))
 
     # Get the attitude at the start of the FDR
-    a = AttitudeProfiles()
-    a.addFromFDR(config.getItem('PROFILES'))
+    a = AttitudeProfiles.makeAttitudeProfiles()
 
-    attitudeE = a.getFirstQuaternion()
+    attitudeE = a.first_quaternion()
 
     # Obtain the autonomous guidance attitude
     aut = AutonomousGuidance(EphemeridesParser(config.getItem('EPHEMERIDES')).ephemerides())

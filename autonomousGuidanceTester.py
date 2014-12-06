@@ -20,7 +20,7 @@ def main():
 #    autoGuid.setPointedAxis(Vector(1,0,0))
     nowTime = calendar.timegm(datetime.datetime.now().utctimetuple())
     config = RosettaConfiguration()
-    nowTime = calendar.timegm(datetime.datetime.strptime(config.getItem('START_TIME'), '%Y-%jT%H:%M:%SZ').utctimetuple())
+    nowTime = datetime.datetime.strptime(config.getItem('START_TIME'), '%Y-%jT%H:%M:%SZ')
 
     q = autoGuid.quaternion(nowTime)
 

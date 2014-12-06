@@ -45,6 +45,8 @@ class rwa:
 
     def set_ang_mom_vector(self, v):
         self.ang_mom_vector = v
+        if not self.four_wheels:
+            self.ang_mom_vector[self.isolated_wheel - 1] = 0
 
     def set_isolated_wheel(self, wheel):
         self.isolated_wheel = wheel
