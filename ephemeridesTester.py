@@ -4,15 +4,18 @@ import math
 import datetime
 from ephemeridesParser import *
 from autonomousGuidance import *
+from rosettaConfiguration import *
 
 AU = 149597870.700
 C  = 299792.458
 
 def main():
 
+    config = RosettaConfiguration()
     ephemerides = Ephemerides.makeEphemerides()
 
     nowTime = calendar.timegm(datetime.datetime.now().utctimetuple())
+    nowTime = calendar.timegm(datetime.datetime.strptime(config.getItem('START_TIME'), '%Y-%jT%H:%M:%SZ').utctimetuple())
 
     eV = ephemerides.earthScVector(nowTime)
     sV = ephemerides.sunScVector(nowTime)
