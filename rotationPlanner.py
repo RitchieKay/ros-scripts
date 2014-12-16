@@ -3,7 +3,6 @@ import sys
 import math
 import datetime
 from solarArrayDriveElectronics import *
-from ephemeridesParser import *
 from autonomousGuidance import *
 from quaternion import *
 

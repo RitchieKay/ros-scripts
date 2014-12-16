@@ -2,7 +2,6 @@
 import sys
 import math
 import datetime
-from ephemeridesParser import *
 from autonomousGuidance import *
 from quaternion import *
 from rotationPlanner import *
