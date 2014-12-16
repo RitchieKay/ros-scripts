@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import math
+import re
 
 def make_vector_from_list(l):
     return Vector(l[0], l[1], l[2])
@@ -28,6 +29,11 @@ class Vector:
     def __getitem__(self, i):
         return self.vector()[i]
   
+    @staticmethod
+    def createFromString(s):
+        v = [float(a) for a in re.findall('[\d\.]+', s)]
+        return Vector(v[0], v[1], v[2])
+
     def vector(self):
         return [self.v1, self.v2, self.v3] 
 

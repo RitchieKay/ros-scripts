@@ -1,5 +1,6 @@
 import datetime
 
+
 class DorWriter:
 
     def __init__(self):
@@ -14,7 +15,7 @@ class DorWriter:
                 self.earliest_sequence_time = sequence.executionTime
             if sequence.executionTime > self.latest_sequence_time:
                 self.latest_sequence_time = sequence.executionTime
-
+        self.sequences.sort()
     def write(self, out):
         self.out = out
 

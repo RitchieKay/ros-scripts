@@ -32,7 +32,7 @@ class AutonomousGuidance:
         self._ecliptic = False
 
     def setPointedAxis(self, a):
-        self._pointedAxis = a
+        self._pointedAxis = a.norm()
         
     def quaternion(self, t):
 

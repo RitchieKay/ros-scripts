@@ -51,6 +51,9 @@ class Sequence:
         self.name = name
         self.parameters = {}
 
+    def __lt__(self, other):
+        return self.executionTime < other.executionTime
+
     def generate_uniqueID(self, char):
         self.uniqueID = char[0] + str(random.random() * 100000000000)[0:9]
 

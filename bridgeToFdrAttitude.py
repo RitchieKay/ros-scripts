@@ -33,15 +33,20 @@ def main():
     attitudeI = Quaternion.nullQuaternion()
     attitudeE = Quaternion.nullQuaternion()
 
+    starttime = datetime.datetime.utcnow()
+
+    if options.time_str:
+        starttime = datetime.datetime.strptime(options.time_str, '%Y-%jT%H:%M:%SZ')
+
     if options.auto:
-        (attitudeI, attitudeE, starttime) = autoAttitude()
+        (attitudeI, attitudeE) = autoAttitude(starttime)
     elif options.attitudeI and options.attitudeE and options.time_str:
         attitudeI = Quaternion.createFromString(options.attitudeI).normalize()
         attitudeE = Quaternion.createFromString(options.attitudeE).normalize()
-        starttime = datetime.datetime.strptime(options.time_str, '%Y-%jT%H:%M:%SZ')
     else:
         parser.print_help()
         sys.exit(-1)
+
 
     scg = SlewCommandGenerator()
 
@@ -118,11 +123,8 @@ def quaternions(filename, scg):
         print >> f, t - scg.start_time(), q[0], q[1], q[2], q[3]
     f.close()
 
-def autoAttitude():
+def autoAttitude(starttime):
     config = RosettaConfiguration()
-    q1 = config.getItem('INITIAL_QUARTERNION').strip().split(',')
-    starttime = datetime.datetime.strptime(config.getItem('START_TIME'), '%Y-%jT%H:%M:%SZ')
-    attitudeI = Quaternion(float(q1[0]), float(q1[1]), float(q1[2]), float(q1[3]))
 
     # Get the attitude at the start of the FDR
     a = AttitudeProfiles.makeAttitudeProfiles()
@@ -130,7 +132,7 @@ def autoAttitude():
     attitudeE = a.first_quaternion()
 
     # Obtain the autonomous guidance attitude
-    aut = AutonomousGuidance(EphemeridesParser(config.getItem('EPHEMERIDES')).ephemerides())
+    aut = AutonomousGuidance(Ephemerides.makeEphemerides())
     aut.setPointedAxis(Vector(float(config.getItem('AUTO_POINTED_X_AXIS')), float(config.getItem('AUTO_POINTED_Y_AXIS')), float(config.getItem('AUTO_POINTED_Z_AXIS'))))
 
 
@@ -146,9 +148,9 @@ def autoAttitude():
         aut.setPerpendicularToEcliptic()
     else:
         aut.setPerpendicularToSunSpacecraft()
-        attitudeI = aut.quaternion(starttime) 
+    attitudeI = aut.quaternion(starttime) 
 
-    return (attitudeI, attitudeE, starttime)
+    return (attitudeI, attitudeE)
 
 if __name__ == '__main__':
     main()

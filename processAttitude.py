@@ -67,37 +67,5 @@ def quaternions(filename, scg):
         print >> f, t - scg.start_time(), q[0], q[1], q[2], q[3]
     f.close()
 
-def autoAttitude():
-    config = RosettaConfiguration()
-    q1 = config.getItem('INITIAL_QUARTERNION').strip().split(',')
-    starttime = datetime.datetime.strptime(config.getItem('START_TIME'), '%Y-%jT%H:%M:%SZ')
-    attitudeI = Quaternion(float(q1[0]), float(q1[1]), float(q1[2]), float(q1[3]))
-
-    # Get the attitude at the start of the FDR
-    a = AttitudeProfiles.makeAttitudeProfiles()
-
-    attitudeE = a.first_quaternion()
-
-    # Obtain the autonomous guidance attitude
-    aut = AutonomousGuidance(EphemeridesParser(config.getItem('EPHEMERIDES')).ephemerides())
-    aut.setPointedAxis(Vector(float(config.getItem('AUTO_POINTED_X_AXIS')), float(config.getItem('AUTO_POINTED_Y_AXIS')), float(config.getItem('AUTO_POINTED_Z_AXIS'))))
-
-
-    if config.getItem('AUTO_EARTH_POINTING') == 'TRUE':
-        aut.setEarthPointing()
-    else:
-        aut.setSunPointing()
-    if config.getItem('AUTO_NORTH_POINTING') == 'TRUE':
-        aut.setNorthPointing()
-    else:
-        aut.setSouthPointing()
-    if config.getItem('AUTO_PERP_ECLIPTIC') == 'TRUE':
-        aut.setPerpendicularToEcliptic()
-    else:
-        aut.setPerpendicularToSunSpacecraft()
-        attitudeI = aut.quaternion(starttime) 
-
-    return (attitudeI, attitudeE, starttime)
-
 if __name__ == '__main__':
     main()

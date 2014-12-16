@@ -5,17 +5,25 @@ import datetime
 from ephemeridesParser import *
 from autonomousGuidance import *
 from rosettaConfiguration import *
+from optparse import OptionParser
 
 AU = 149597870.700
 C  = 299792.458
 
 def main():
 
+    parser = OptionParser()
     config = RosettaConfiguration()
     ephemerides = Ephemerides.makeEphemerides()
+    parser.add_option("-t", "--time", dest="time", help="Specify time YYYY-DDDTHH:MM:SSZ")
+
+    (options, args) = parser.parse_args()
 
     nowTime = calendar.timegm(datetime.datetime.now().utctimetuple())
     nowTime = calendar.timegm(datetime.datetime.strptime(config.getItem('START_TIME'), '%Y-%jT%H:%M:%SZ').utctimetuple())
+
+    if options.time:
+        nowTime = calendar.timegm(datetime.datetime.strptime(options.time, '%Y-%jT%H:%M:%SZ').utctimetuple())
 
     eV = ephemerides.earthScVector(nowTime)
     sV = ephemerides.sunScVector(nowTime)
