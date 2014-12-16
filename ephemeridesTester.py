@@ -19,7 +19,6 @@ def main():
     (options, args) = parser.parse_args()
 
     nowTime = calendar.timegm(datetime.datetime.now().utctimetuple())
-    nowTime = calendar.timegm(datetime.datetime.strptime(config.getItem('START_TIME'), '%Y-%jT%H:%M:%SZ').utctimetuple())
 
     if options.time:
         nowTime = calendar.timegm(datetime.datetime.strptime(options.time, '%Y-%jT%H:%M:%SZ').utctimetuple())
