@@ -31,7 +31,7 @@ class Vector:
   
     @staticmethod
     def createFromString(s):
-        v = [float(a) for a in re.findall('[\d\.]+', s)]
+        v = [float(a) for a in re.findall('[\-\d\.]+', s)]
         return Vector(v[0], v[1], v[2])
 
     def vector(self):

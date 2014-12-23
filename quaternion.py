@@ -50,7 +50,7 @@ class Quaternion:
         return Quaternion(1,0,0,0)
     @staticmethod
     def createFromString(s):
-        q = [float(a) for a in re.findall('[\d\.]+', s)]
+        q = [float(a) for a in re.findall('[\-\d\.]+', s)]
         return Quaternion(q[0], q[1], q[2], q[3])
     @staticmethod
     def createFromVectors(v1, v2, v3):
