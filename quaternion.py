@@ -206,3 +206,6 @@ class Quaternion:
     def __repr__(self):
         return str(self)
 
+    def __neg__(self):
+        return Quaternion(-self.s, -self.v1, -self.v2, -self.v3)
+
