@@ -3,6 +3,8 @@
 import math
 import re
 
+inc = 23.4 * math.pi / 180
+
 def make_vector_from_list(l):
     return Vector(l[0], l[1], l[2])
 
@@ -28,6 +30,19 @@ class Vector:
 
     def __getitem__(self, i):
         return self.vector()[i]
+
+    @staticmethod
+    def eclipticToEquatorial(v):
+        v1 = v[0]
+        v2 = math.cos(inc) * v[1] - math.sin(inc) * v[2]
+        v3 = math.cos(inc) * v[2] + math.sin(inc) * v[1]
+        return Vector(v1, v2, v3)
+    @staticmethod
+    def equatorialToEcliptic(v):
+        v1 = v[0]
+        v2 = math.cos(inc) * v[1] + math.sin(inc) * v[2]
+        v3 = math.cos(inc) * v[2] - math.sin(inc) * v[1]
+        return Vector(v1, v2, v3)
   
     @staticmethod
     def createFromString(s):
