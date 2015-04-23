@@ -6,6 +6,7 @@ from autonomousGuidance import *
 from rosettaConfiguration import *
 from antennaPointingMechanism import *
 from solarArrayDriveElectronics import *
+from attitudeProfiles import *
 from optparse import OptionParser
 
 AU = 149597870.700
@@ -20,20 +21,19 @@ def main():
     (options, args) = parser.parse_args()
 
     starttime = datetime.datetime.now()
-    attitudeQuaternion = Quaternion.nullQuaternion()
+    attitudeProfiles = AttitudeProfiles.makeAttitudeProfiles()
 
     config = RosettaConfiguration()
     ephemerides = Ephemerides.makeEphemerides()
 
     starttime = calendar.timegm(datetime.datetime.now().utctimetuple())
-    attitudeQuaternion = Quaternion(-0.00298, -0.043, -0.973, 0.229)
+    starttime = calendar.timegm((datetime.datetime.now() - datetime.timedelta(seconds = ephemerides.earthScVector(starttime).magnitude() / C)).utctimetuple())
 
     if options.time_str:
         starttime = calendar.timegm(datetime.datetime.strptime(options.time_str, '%Y-%jT%H:%M:%SZ').utctimetuple())
+    attitudeQuaternion = attitudeProfiles.quaternion(starttime)
     if options.attitude:
         attitudeQuaternion = Quaternion.createFromString(options.attitude).normalize()
-
-    print starttime
 
     eS = ephemerides.earthScVector(starttime)
     sS = ephemerides.sunScVector(starttime)
@@ -41,16 +41,34 @@ def main():
     spacecraftEarthDirection =  -attitudeQuaternion.conjugate().rotate_vector(eS.norm()).norm()
     spacecraftSunDirection   =  -attitudeQuaternion.conjugate().rotate_vector(sS.norm()).norm()
 
+    print '------------------------------------------------------'
+    print 'Information valid at:', datetime.datetime.fromtimestamp(starttime).strftime('%Y-%jT%H:%M:%SZ')
+    print '------------------------------------------------------'
+    print 'One Way Light Time  :', str(datetime.timedelta(seconds = ephemerides.earthScVector(starttime).magnitude() / C))
+    print '------------------------------------------------------'
+
+    print ''
     print 'Earth/Sun Vectors in Spacecraft Frame'
     print '------------------------------------------------------'
     print 'Earth direction = ', spacecraftEarthDirection
     print 'Sun direction   = ', spacecraftSunDirection
 
     print ''
+    print 'Attitude Quaternion'
+    print '------------------------------------------------------'
+    print attitudeQuaternion
+
+    print ''
     print 'Solar Angles with S/C Axes'
     print '------------------------------------------------------'
 
     print '%(X)02.2f   %(Y)02.2f   %(Z)02.2f' % {'X':180*math.acos(spacecraftSunDirection[0])/math.pi, 'Y':180*math.acos(spacecraftSunDirection[1])/math.pi, 'Z':180*math.acos(spacecraftSunDirection[2])/math.pi}
+
+    print ''
+    print 'Earth Angles with S/C Axes'
+    print '------------------------------------------------------'
+
+    print '%(X)02.2f   %(Y)02.2f   %(Z)02.2f' % {'X':180*math.acos(spacecraftEarthDirection[0])/math.pi, 'Y':180*math.acos(spacecraftEarthDirection[1])/math.pi, 'Z':180*math.acos(spacecraftEarthDirection[2])/math.pi}
 
     print ''
     print 'Solar Array Angles'
