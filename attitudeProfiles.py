@@ -26,8 +26,11 @@ class AttitudeProfiles:
         self.profiles.append(ProfileElement(starttime, endtime, attitudeProfile))
 
     @staticmethod
-    def makeAttitudeProfiles():
-        a = AttitudeProfileParser(RosettaConfiguration().getItem('PROFILES'))
+    def makeAttitudeProfiles(fdr_file = None):
+        if fdr_file:
+            a = AttitudeProfileParser(fdr_file)
+        else:
+            a = AttitudeProfileParser(RosettaConfiguration().getItem('PROFILES'))
         sequences = a.get_sequences()
         profiles = AttitudeProfiles()
         for sequence in sequences:
