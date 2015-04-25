@@ -41,9 +41,7 @@ def main():
 
     eS = ephemerides.earthScVector(starttime)
     sS = ephemerides.sunScVector(starttime)
-
     earthSun = eS - sS
-
 
     spacecraftEarthDirection =  -attitudeQuaternion.conjugate().rotate_vector(eS.norm()).norm()
     spacecraftSunDirection   =  -attitudeQuaternion.conjugate().rotate_vector(sS.norm()).norm()
@@ -80,13 +78,15 @@ def main():
     print ''
     print 'STR-A Attitude Quaternion'
     print '------------------------------------------------------'
-    print attitudeQuaternion * starTracker().spacecraft_str_a()
+    print starTracker().str_attitude(attitudeQuaternion)[0]
+    #print starTracker().fieldOfView(attitudeQuaternion)[0]
     
 
     print ''
     print 'STR-B Attitude Quaternion'
     print '------------------------------------------------------'
-    print attitudeQuaternion * starTracker().spacecraft_str_b()
+    print starTracker().str_attitude(attitudeQuaternion)[1]
+    #print starTracker().fieldOfView(attitudeQuaternion)[1]
 
     print ''
     print 'Solar Angles with S/C Axes'

@@ -15,11 +15,13 @@ class starTracker:
                                            4.659036e-01,
                                            3.892090e-01)
 
-    def str_a_spacecraft(self):
-        return self.STR_A_QUATERNION
-    def str_b_spacecraft(self):
-        return self.STR_B_QUATERNION
-    def spacecraft_str_a(self):
-        return self.STR_A_QUATERNION.conjugate()
-    def spacecraft_str_b(self):
-        return self.STR_B_QUATERNION.conjugate()
+    def str_attitude(self, spacecraftAttitude):
+
+        return (spacecraftAttitude * self.STR_A_QUATERNION.conjugate(), spacecraftAttitude * self.STR_B_QUATERNION.conjugate())
+
+
+    def fieldOfView(self, spacecraftAttitude):
+       
+        (str_a_att, str_b_att) = self.str_attitude(spacecraftAttitude)
+
+        return (str_a_att.celestialCoordinates(), str_b_att.celestialCoordinates())

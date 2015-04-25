@@ -168,6 +168,27 @@ class Quaternion:
         print 'v2:', (self.v2 + q2.v2)/2, (q2.v2 - self.v2)/2
         print 'v3:', (self.v3 + q2.v3)/2, (q2.v3 - self.v3)/2
 
+    def celestialCoordinates(self):
+
+        q = Quaternion(self.s, self.v1, self.v2, self.v3)
+        q2 = q * q
+
+        ## calculate direction cosine matrix elements from $quaternions
+        xa = q2[0] - q2[1] - q2[2] + q2[3]
+        xb = 2 * (q[0] * q[1] + q[2] * q[3])
+        xn = 2 * (q[0] * q[2] - q[1] * q[3])
+        yn = 2 * (q[1] * q[2] + q[0] * q[3])
+        zn = q2[3] + q2[2] - q2[0] - q2[1]
+        ##; calculate RA, Dec, Roll from cosine matrix elements
+        ra = math.degrees(math.atan2(xb , xa)) ;
+        dec = math.degrees(math.atan2(xn , math.sqrt(1 - xn**2)));
+        roll = math.degrees(math.atan2(yn , zn)) ;
+ 
+        if ( ra < 0 ):
+          ra += 360
+        if ( roll < 0 ):
+          roll += 360
+        return {'RA':ra, 'DEC':dec, 'ROLL':roll}
 
     def __getitem__(self, i):
         if i == 0:
