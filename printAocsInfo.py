@@ -19,6 +19,7 @@ def main():
     parser.add_option("-a", "--attitude", dest="attitude", help="Specify attitude quarternion (q0, q1, q2, q3)")
     parser.add_option("-t", "--start-time", dest="time_str", help="Specify time YYYY-DDDTHH:MM:SSZ")
     parser.add_option("-f", "--fdr-file", dest="fdr_str", help="Specify path to FDR")
+    parser.add_option("-g", "--auto-guid", action="store_true", dest="aut_guid", help="Use autonomous guidance")
 
     (options, args) = parser.parse_args()
 
@@ -26,18 +27,22 @@ def main():
     ephemerides = Ephemerides.makeEphemerides()
 
     starttime = calendar.timegm(datetime.datetime.utcnow().utctimetuple())
-    starttime = calendar.timegm((datetime.datetime.utcnow() - datetime.timedelta(seconds = ephemerides.earthScVector(starttime).magnitude() / C)).utctimetuple())
+    starttime_dt = (datetime.datetime.utcnow() - datetime.timedelta(seconds = ephemerides.earthScVector(starttime).magnitude() / C))
+    starttime = calendar.timegm((starttime_dt).utctimetuple())
 
     if options.fdr_str:
-        attitudeProfiles = AttitudeProfiles.makeAttitudeProfiles(options.fdr_str)
+	attitudeProfiles = AttitudeProfiles.makeAttitudeProfiles(options.fdr_str)
     else: 
-        attitudeProfiles = AttitudeProfiles.makeAttitudeProfiles()
+	attitudeProfiles = AttitudeProfiles.makeAttitudeProfiles()
 
     if options.time_str:
-        starttime = calendar.timegm(datetime.datetime.strptime(options.time_str, '%Y-%jT%H:%M:%SZ').utctimetuple())
+	starttime_dt = datetime.datetime.strptime(options.time_str, '%Y-%jT%H:%M:%SZ')
+	starttime = calendar.timegm(starttime_dt).utctimetuple()
     attitudeQuaternion = attitudeProfiles.quaternion(starttime)
     if options.attitude:
         attitudeQuaternion = Quaternion.createFromString(options.attitude).normalize()
+    if options.aut_guid:
+        attitudeQuaternion = AutonomousGuidance(ephemerides).quaternion(starttime_dt)
 
     eS = ephemerides.earthScVector(starttime)
     sS = ephemerides.sunScVector(starttime)
@@ -117,7 +122,7 @@ def main():
     print ''
     print 'HGA Angles (Shows all Valid Options)'
     print '------------------------------------------------------'
-    print 'Set = ', antennaPointingMechanism.current_set()
+    print 'Set     = ', antennaPointingMechanism.current_set()
     print 'Azimuth = %(az)01.3f, Elevation = %(el)01.3f (radians)' % {'az':antennaPointingMechanism.azimuth(), 'el':antennaPointingMechanism.elevation()}
     print 'Azimuth = %(az)01.3f, Elevation = %(el)01.3f (degrees)' % {'az':math.degrees(antennaPointingMechanism.azimuth()), 'el':math.degrees(antennaPointingMechanism.elevation())}
 
@@ -126,6 +131,8 @@ def main():
       antennaPointingMechanism.select_set_2()
       antennaPointingMechanism.compute_position(starttime, attitudeQuaternion)
       if antennaPointingMechanism.current_set() == 'SET_2':
+        print ''
+        print '------------------------------------------------------'
         print 'Set     = ', antennaPointingMechanism.current_set()
         print 'Azimuth = %(az)01.3f, Elevation = %(el)01.3f (radians)' % {'az':antennaPointingMechanism.azimuth(), 'el':antennaPointingMechanism.elevation()}
         print 'Azimuth = %(az)01.3f, Elevation = %(el)01.3f (degrees)' % {'az':math.degrees(antennaPointingMechanism.azimuth()), 'el':math.degrees(antennaPointingMechanism.elevation())}

@@ -14,10 +14,10 @@ class apme:
         self.set_valid = True
 
     def select_set_1(self):
-        self.set_1 = 'SET_1'
+        self.set = 'SET_1'
 
     def select_set_2(self):
-        self.set_2 = 'SET_2'
+        self.set = 'SET_2'
 
     def elevation(self):
         return self.position['X1']
@@ -60,7 +60,6 @@ class apme:
 
         angle1_valid = (ang_pos_1['X1'] > APME_VALIDITY_RANGE_MIN['X1']) and (ang_pos_1['X1'] < APME_VALIDITY_RANGE_MAX['X1']) and (ang_pos_1['X2'] > APME_VALIDITY_RANGE_MIN['X2']) and (ang_pos_1['X2'] < APME_VALIDITY_RANGE_MAX['X2'])
         angle2_valid = (ang_pos_2['X1'] > APME_VALIDITY_RANGE_MIN['X1']) and (ang_pos_2['X1'] < APME_VALIDITY_RANGE_MAX['X1']) and (ang_pos_2['X2'] > APME_VALIDITY_RANGE_MIN['X2']) and (ang_pos_2['X2'] < APME_VALIDITY_RANGE_MAX['X2'])
-
 
         if self.set == 'SET_1':
             if angle1_valid: 

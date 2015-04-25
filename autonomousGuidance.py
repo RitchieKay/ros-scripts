@@ -1,5 +1,6 @@
 from ephemerides import *
 from quaternion import *
+from rosettaConfiguration import *
 
 class AutonomousGuidance: 
 
@@ -9,6 +10,24 @@ class AutonomousGuidance:
         self._earthPointing = True
         self._ecliptic = True
         self._yNorth = True
+
+        config = RosettaConfiguration()
+
+        if config.getItem('AUTO_EARTH_POINTING') == 'TRUE':
+            self.setEarthPointing()
+        else:
+            self.setSunPointing()
+        if config.getItem('AUTO_NORTH_POINTING') == 'TRUE':
+            self.setNorthPointing()
+        else:
+            self.setSouthPointing()
+        if config.getItem('AUTO_PERP_ECLIPTIC') == 'TRUE':
+            self.setPerpendicularToEcliptic()
+        else:
+            self.setPerpendicularToSunSpacecraft()
+
+        self.setPointedAxis(Vector(float(config.getItem('AUTO_POINTED_X_AXIS')), float(config.getItem('AUTO_POINTED_Y_AXIS')), float(config.getItem('AUTO_POINTED_Z_AXIS'))))
+
 
     def setEphemerides(self, e):
         self._ephemerides = e 

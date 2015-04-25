@@ -15,6 +15,9 @@ class starTracker:
                                            4.659036e-01,
                                            3.892090e-01)
 
+    def quaternions(self):
+        return (self.STR_A_QUATERNION, self.STR_B_QUATERNION)
+
     def str_attitude(self, spacecraftAttitude):
 
         return (spacecraftAttitude * self.STR_A_QUATERNION.conjugate(), spacecraftAttitude * self.STR_B_QUATERNION.conjugate())
