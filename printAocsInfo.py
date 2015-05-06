@@ -26,9 +26,6 @@ def main():
     config = RosettaConfiguration()
     ephemerides = Ephemerides.makeEphemerides()
 
-    starttime = calendar.timegm(datetime.datetime.utcnow().utctimetuple())
-    starttime_dt = (datetime.datetime.utcnow() - datetime.timedelta(seconds = ephemerides.earthScVector(starttime).magnitude() / C))
-    starttime = calendar.timegm((starttime_dt).utctimetuple())
 
     if options.fdr_str:
 	attitudeProfiles = AttitudeProfiles.makeAttitudeProfiles(options.fdr_str)
@@ -38,6 +35,10 @@ def main():
     if options.time_str:
 	starttime_dt = datetime.datetime.strptime(options.time_str, '%Y-%jT%H:%M:%SZ')
 	starttime = calendar.timegm(starttime_dt.utctimetuple())
+    else:
+        starttime = calendar.timegm(datetime.datetime.utcnow().utctimetuple())
+        starttime_dt = (datetime.datetime.utcnow() - datetime.timedelta(seconds = ephemerides.earthScVector(starttime).magnitude() / C))
+        starttime = calendar.timegm((starttime_dt).utctimetuple())
     attitudeQuaternion = attitudeProfiles.quaternion(starttime)
     if options.attitude:
         attitudeQuaternion = Quaternion.createFromString(options.attitude).normalize()
@@ -92,7 +93,6 @@ def main():
     print 'STR-B Attitude Quaternion'
     print '------------------------------------------------------'
     print starTracker().str_attitude(attitudeQuaternion)[1]
-    #print starTracker().str_attitude(attitudeQuaternion)[1].rotate_vector(Vector(1,0,0))
     #print starTracker().fieldOfView(attitudeQuaternion)[1]
 
     print ''

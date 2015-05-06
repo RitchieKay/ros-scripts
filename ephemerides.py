@@ -21,7 +21,7 @@ class EphemeridesParser:
 
     def __init__(self, por_file):
 
-        self.sequences = []
+        self.ephs = Ephemerides()
 
         parser = make_parser()
         curHandler = EventHandler()
@@ -29,12 +29,12 @@ class EphemeridesParser:
         fh = open(por_file)
         parser.parse(fh)
 
-        self.sequences += curHandler.get_sequences()
+        for s in curHandler.get_sequences():
+            self.ephs.add_ephemerid(Ephemerid(s))
         fh.close()
 
     def ephemerides(self):
-        return Ephemerides(self.sequences[0])
-
+        return self.ephs
 
 
 class EphemeridesError(Exception):
@@ -46,6 +46,25 @@ class Ephemerides:
     @staticmethod
     def makeEphemerides():
         return EphemeridesParser(RosettaConfiguration().getItem('EPHEMERIDES')).ephemerides()
+
+    def __init__(self):
+        self.ephs = []
+
+    def add_ephemerid(self, e):
+        self.ephs.append(e)
+
+    def sunScVector(self, t):
+        for e in self.ephs:
+            if t >= e.starttime() and t <= e.endtime():
+                return e.sunScVector(t)
+        raise EphemeridesError
+    def earthScVector(self, t):
+        for e in self.ephs:
+            if t >= e.starttime() and t <= e.endtime():
+                return e.earthScVector(t)
+        raise EphemeridesError
+
+class Ephemerid:
 
     def __init__(self, sequence):
         if sequence.sequence_name() != 'AACF103A':
@@ -120,6 +139,10 @@ class Ephemerides:
         self.sunScZ_cheb.add_coefficient(5, p[50].get_value())
         self.sunScZ_cheb.add_coefficient(6, p[51].get_value())
         self.sunScZ_cheb.add_coefficient(7, p[52].get_value())
+
+
+    def __str__(self):
+        return 'Starttime =' + str(self._starttime) + '. Endtime = ' + str(self._endtime)
 
     def starttime(self):
         return self._starttime
